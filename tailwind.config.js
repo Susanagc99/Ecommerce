@@ -1,10 +1,11 @@
-// tailwind.config.js
-const {heroui} = require("@heroui/theme");
+const { heroui } = require("@heroui/theme");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./node_modules/@heroui/theme/dist/components/(button|ripple|spinner).js",
+    "./app/**/*.{js,ts,jsx,tsx}", // todos los archivos de tu app
+    "./components/**/*.{js,ts,jsx,tsx}", // si tienes carpeta components
+    "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}", // HeroUI
   ],
   theme: {
     extend: {},

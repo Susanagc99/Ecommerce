@@ -1,9 +1,14 @@
 @import "tailwindcss";
+/* Note: You may need to change the path to fit your project structure */
+@source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@custom-variant dark (&:is(.dark *));
+
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
+
 
 @theme inline {
   --color-background: var(--background);
@@ -25,7 +30,6 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-
 .login-container {
   display: flex;
   justify-content: center;
@@ -35,7 +39,7 @@ body {
   height: 100vh;
 }
 
-.login-box{
+.login-box {
   display: flex;
   align-items: center;
   color: black;
@@ -44,5 +48,3 @@ body {
   padding: 50px;
   border-radius: 20px;
 }
-
-
