@@ -1,15 +1,33 @@
-const { heroui } = require("@heroui/theme");
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx}", // todos los archivos de tu app
-    "./components/**/*.{js,ts,jsx,tsx}", // si tienes carpeta components
-    "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}", // HeroUI
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: '#06B6D4',
+          light: '#22D3EE',
+          dark: '#0891B2',
+        },
+        secondary: {
+          DEFAULT: '#EC4899',
+          light: '#F472B6',
+          dark: '#DB2777',
+        },
+        accent: {
+          DEFAULT: '#FBBF24',
+          light: '#FCD34D',
+          dark: '#F59E0B',
+        },
+      },
+      fontFamily: {
+        inter: ['var(--font-inter)'],
+      },
+    },
   },
-  darkMode: "class",
-  plugins: [heroui()],
-};
+  plugins: [],
+}

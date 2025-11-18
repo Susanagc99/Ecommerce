@@ -1,0 +1,94 @@
+/* Logo Container */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.logo:hover .icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Icon Wrapper */
+.iconWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Brand Name */
+.brandName {
+  display: flex;
+  align-items: baseline;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.tech {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.land {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Sizes */
+.sm .icon {
+  width: 28px;
+  height: 28px;
+}
+
+.sm .brandName {
+  font-size: 1.125rem;
+}
+
+.md .icon {
+  width: 36px;
+  height: 36px;
+}
+
+.md .brandName {
+  font-size: 1.5rem;
+}
+
+.lg .icon {
+  width: 48px;
+  height: 48px;
+}
+
+.lg .brandName {
+  font-size: 2rem;
+}
+
+/* Hover Animation */
+.logo:hover .tech {
+  animation: shimmer 1.5s infinite;
+}
+
+.logo:hover .land {
+  animation: shimmer 1.5s infinite 0.2s;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+

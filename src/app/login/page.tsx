@@ -1,126 +1,193 @@
 'use client'
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Input, Button } from '@heroui/react';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import Input from '@/components/Input'
+import Button from '@/components/Button'
+import Logo from '@/components/Logo'
+import { toast } from 'react-toastify'
+import styles from './login.module.css'
+import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
 // Usuarios hardcoded
 const usuariosHardcoded = [
-    {
-        username: "susana",
-        password: "admin123",
-        name: "Susana Gutiérrez",
-        role: "Admin",
-        isActive: true,
-    },
-    {
-        username: "Maria",
-        password: "holi123",
-        name: "María Rodríguez",
-        role: "Customer",
-        isActive: true,
+  {
+    username: 'susana',
+    password: 'admin123',
+    name: 'Susana Gutiérrez',
+    email: 'susana@techland.com',
+    role: 'Admin',
+    isActive: true,
+  },
+  {
+    username: 'maria',
+    password: 'holi123',
+    name: 'María Rodríguez',
+    email: 'maria@example.com',
+    role: 'Customer',
+    isActive: true,
+  },
+]
+
+export default function LoginPage() {
+  const router = useRouter()
+  const [user, setUser] = useState('')
+  const [pass, setPass] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    // Redirigir si ya hay sesión
+    const session = localStorage.getItem('userSession')
+    if (session) {
+      router.push('/')
     }
-];
+  }, [router])
 
-export default function Home() {
-    const router = useRouter();
-    const [user, setUser] = useState("");
-    const [pass, setPass] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
-    useEffect(() => {
-        // Redirigir si ya hay sesión
-        const session = localStorage.getItem("userSession");
-        if (session) {
-            router.push("/dashboard");
-        }
-    }, [router]);
-
-    const handleClick = async () => {
-        setError("");
-        setLoading(true);
-
-        if (!user.trim()) {
-            setError("El usuario es requerido");
-            setLoading(false);
-            return;
-        }
-
-        if (!pass.trim()) {
-            setError("La contraseña es requerida");
-            setLoading(false);
-            return;
-        }
-
-        const usuarioEncontrado = usuariosHardcoded.find(
-            u => u.username === user && u.password === pass
-        );
-
-        if (usuarioEncontrado) {
-            const sessionData = {
-                username: usuarioEncontrado.username,
-                name: usuarioEncontrado.name,
-                role: usuarioEncontrado.role,
-                isActive: usuarioEncontrado.isActive,
-                loginTime: new Date().toISOString()
-            };
-
-            localStorage.setItem("userSession", JSON.stringify(sessionData));
-            router.push("/dashboard");
-        } else {
-            setError("Usuario o contraseña inválidos");
-        }
-
-        setLoading(false);
+    if (!user.trim()) {
+      setError('Username is required')
+      setLoading(false)
+      return
     }
 
-    return (
-        <div className="login-container">
-            <div className="login-box">
-                <div className="text-2xl font-bold mb-6 text-center">Login</div>
+    if (!pass.trim()) {
+      setError('Password is required')
+      setLoading(false)
+      return
+    }
 
-                <Input
-                    label="Username"
-                    type="text"
-                    value={user}
-                    onChange={(e) => {
-                        setUser(e.target.value);
-                        setError("");
-                    }}
-                    isInvalid={!!error && !user.trim()}
-                    className="w-full"
-                />
+    // Simular delay de red
+    await new Promise(resolve => setTimeout(resolve, 800))
 
-                <Input
-                    label="Password"
-                    labelPlacement="inside"
-                    type="password"
-                    value={pass}
-                    onChange={(e) => {
-                        setPass(e.target.value);
-                        setError("");
-                    }}
-                    isInvalid={!!error && !pass.trim()}
-                    className="w-full"
-                />
+    const usuarioEncontrado = usuariosHardcoded.find(
+      (u) => u.username.toLowerCase() === user.toLowerCase() && u.password === pass
+    )
 
-                {error && (
-                    <div className="error-message mb-4 p-3 text-gray-500 rounded">
-                        {error}
-                    </div>
-                )}
+    if (usuarioEncontrado) {
+      const sessionData = {
+        username: usuarioEncontrado.username,
+        name: usuarioEncontrado.name,
+        email: usuarioEncontrado.email,
+        role: usuarioEncontrado.role,
+        isActive: usuarioEncontrado.isActive,
+        loginTime: new Date().toISOString(),
+      }
 
-                <Button
-                    onPress={handleClick}
-                    className="bg-linear-to-tr from-pink-500 to-yellow-500 text-white shadow-lg"
-                    radius="full"
-                    isLoading={loading}
-                    isDisabled={loading}
-                >
-                    {loading ? "Logging in..." : "Login"}
-                </Button>
-            </div>
+      localStorage.setItem('userSession', JSON.stringify(sessionData))
+      
+      toast.success(`Welcome back, ${usuarioEncontrado.name}! 👋`, {
+        position: 'top-right',
+        autoClose: 2000,
+      })
+
+      setTimeout(() => {
+        router.push('/')
+      }, 500)
+    } else {
+      setError('Invalid username or password')
+      toast.error('Login failed. Please check your credentials.', {
+        position: 'top-right',
+      })
+    }
+
+    setLoading(false)
+  }
+
+  return (
+    <div className={styles.loginContainer}>
+      <div className={styles.loginCard}>
+        {/* Logo */}
+        <div className={styles.logoWrapper}>
+          <Logo size="lg" />
         </div>
-    );
+
+        {/* Title */}
+        <div className={styles.header}>
+          <h1 className={styles.title}>Welcome Back</h1>
+          <p className={styles.subtitle}>Sign in to continue to Techland</p>
+        </div>
+
+        {/* Demo Credentials */}
+        <div className={styles.demoCredentials}>
+          <p className={styles.demoTitle}>🔑 Demo Credentials:</p>
+          <div className={styles.demoGrid}>
+            <div className={styles.demoItem}>
+              <strong>Admin:</strong> susana / admin123
+            </div>
+            <div className={styles.demoItem}>
+              <strong>Customer:</strong> maria / holi123
+            </div>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <Input
+            label="Username"
+            type="text"
+            value={user}
+            onChange={(e) => {
+              setUser(e.target.value)
+              setError('')
+            }}
+            error={error && !user.trim() ? 'Username is required' : ''}
+            icon={<UserIcon />}
+            required
+          />
+
+          <Input
+            label="Password"
+            type="password"
+            value={pass}
+            onChange={(e) => {
+              setPass(e.target.value)
+              setError('')
+            }}
+            error={error && !pass.trim() ? 'Password is required' : ''}
+            icon={<LockClosedIcon />}
+            required
+          />
+
+          {error && (
+            <div className={styles.errorMessage}>
+              ⚠️ {error}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            size="lg"
+            variant="primary"
+            fullWidth
+            disabled={loading}
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </Button>
+        </form>
+
+        {/* Register Link */}
+        <div className={styles.footer}>
+          <p className={styles.footerText}>
+            Don't have an account?{' '}
+            <Link href="/register" className={styles.footerLink}>
+              Sign up
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* Background Decoration */}
+      <div className={styles.background}>
+        <div className={styles.shape1} />
+        <div className={styles.shape2} />
+        <div className={styles.shape3} />
+      </div>
+    </div>
+  )
 }

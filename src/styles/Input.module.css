@@ -1,0 +1,132 @@
+/* Input Wrapper */
+.inputWrapper {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+/* Label */
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.025em;
+}
+
+.required {
+  color: var(--secondary);
+  margin-left: 0.25rem;
+}
+
+/* Input Container */
+.inputContainer {
+  position: relative;
+  width: 100%;
+}
+
+/* Icon */
+.icon {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  pointer-events: none;
+  transition: color 0.3s ease;
+}
+
+/* Input Base */
+.input {
+  width: 100%;
+  padding: 0.75rem 0;
+  font-family: var(--font-inter);
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--border);
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input::placeholder {
+  color: var(--text-light);
+}
+
+.input:focus {
+  border-bottom-color: var(--primary);
+}
+
+.input:focus + .underline {
+  width: 100%;
+}
+
+.input:focus ~ .icon {
+  color: var(--primary);
+}
+
+.withIcon {
+  padding-left: 2rem;
+}
+
+/* Animated Underline */
+.underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+/* Error State */
+.input.error {
+  border-bottom-color: var(--secondary-dark);
+}
+
+.input.error:focus {
+  border-bottom-color: var(--secondary-dark);
+}
+
+.input.error:focus + .underline {
+  background: var(--secondary-dark);
+  width: 100%;
+}
+
+/* Helper & Error Text */
+.helperText,
+.errorText {
+  font-size: 0.75rem;
+  margin-top: 0.375rem;
+  display: block;
+}
+
+.helperText {
+  color: var(--text-secondary);
+}
+
+.errorText {
+  color: var(--secondary-dark);
+  font-weight: 500;
+}
+
+/* Disabled State */
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--background-soft);
+}
+
+/* Hover Effects */
+.input:not(:disabled):hover {
+  border-bottom-color: var(--text-secondary);
+}
+
