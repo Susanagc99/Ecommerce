@@ -74,48 +74,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us Section */}
-      <section className={styles.whySection}>
-        <div className={styles.container}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Why Choose Techland?</h2>
-          </div>
-
-          <div className={styles.featuresGrid}>
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>🚚</div>
-              <h3 className={styles.featureTitle}>Fast Delivery</h3>
-              <p className={styles.featureText}>
-                Free shipping on orders over $50. Get your gadgets delivered fast!
-              </p>
-            </div>
-
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>🔒</div>
-              <h3 className={styles.featureTitle}>Secure Payment</h3>
-              <p className={styles.featureText}>
-                100% secure transactions with encryption. Shop with confidence.
-              </p>
-            </div>
-
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>⭐</div>
-              <h3 className={styles.featureTitle}>Quality Guaranteed</h3>
-              <p className={styles.featureText}>
-                Only authentic products from trusted brands. Quality you can trust.
-              </p>
-            </div>
-
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>💬</div>
-              <h3 className={styles.featureTitle}>24/7 Support</h3>
-              <p className={styles.featureText}>
-                Our support team is always ready to help you. Contact us anytime.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+    
     </div>
   )
 }
