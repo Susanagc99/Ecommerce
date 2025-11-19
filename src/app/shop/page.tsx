@@ -59,7 +59,7 @@ export default function ShopPage() {
       <div className={styles.container}>
         {/* Header */}
         <div className={styles.header}>
-          <h1 className={styles.title}>Shop All Products</h1>
+          <h1 className={styles.title}>Shop all products</h1>
           <p className={styles.subtitle}>
             Discover the latest tech gadgets and accessories
           </p>

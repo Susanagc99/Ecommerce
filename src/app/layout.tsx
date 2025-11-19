@@ -25,12 +25,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
         <Providers>
-          <div style={{ display: 'flex', minHeight: '100vh' }}>
-            <Navbar />
-            <main style={{ flex: 1, width: '100%' }}>
-              {children}
-            </main>
-          </div>
+          <Navbar />
+          <main style={{ paddingTop: '70px', minHeight: '100vh' }}>
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

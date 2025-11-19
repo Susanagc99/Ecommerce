@@ -3,7 +3,7 @@
   position: relative;
   min-height: 600px;
   height: 85vh;
-  max-height: 800px;
+  max-height: 600px;
   display: flex;
   align-items: center;
   overflow: hidden;

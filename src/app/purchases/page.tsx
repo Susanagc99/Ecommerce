@@ -9,7 +9,7 @@ export default function PurchasesPage() {
         WebkitTextFillColor: 'transparent',
         marginBottom: '1rem'
       }}>
-        My Purchases
+        My purchases
       </h1>
       <p style={{ fontSize: '1.125rem', color: '#6B7280', marginBottom: '2rem' }}>
         Track your order history and manage your purchases

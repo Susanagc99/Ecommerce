@@ -31,7 +31,7 @@ export default function HeroSection() {
         <div className={styles.container}>
           <div className={styles.textContent}>
               <h1 className={styles.title}>
-              Find Your Perfect
+              Find your perfect
               <br />
               <span className={styles.titleGradient}>Gadgets</span>
             </h1>
@@ -44,12 +44,12 @@ export default function HeroSection() {
             <div className={styles.ctas}>
               <Link href="/shop">
                 <Button size="md" variant="primary">
-                  Shop Now
+                  Shop now
                 </Button>
               </Link>
               <Link href="/about">
                 <Button size="md" variant="outline">
-                  Learn More
+                  Learn more
                 </Button>
               </Link>
             </div>

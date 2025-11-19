@@ -34,14 +34,10 @@
 }
 
 /* Categories Section */
-.categoriesSection {
-  padding: 4rem 0;
-  background: var(--background-soft);
-}
-
 .categoriesGrid {
+  margin-top: 1rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1.5rem;
 }
 

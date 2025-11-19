@@ -151,7 +151,7 @@ export default function RegisterPage() {
 
         {/* Title */}
         <div className={styles.header}>
-          <h1 className={styles.title}>Create Account</h1>
+          <h1 className={styles.title}>Create account</h1>
           <p className={styles.subtitle}>Join Techland today and start shopping</p>
         </div>
 
