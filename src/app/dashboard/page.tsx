@@ -63,7 +63,7 @@ export default function DashboardPage() {
 
         {/* User Info Card */}
         <div className={styles.card}>
-          <h2 className={styles.cardTitle}>👤 User Information</h2>
+          <h2 className={styles.cardTitle}>User Information</h2>
           <div className={styles.infoGrid}>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Name:</span>
@@ -100,44 +100,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>⚡ Quick Actions</h2>
-          <div className={styles.actionsGrid}>
-            <button
-              onClick={() => router.push('/')}
-              className={styles.actionCard}
-            >
-              <span className={styles.actionIcon}>🏠</span>
-              <span className={styles.actionText}>Go to Home</span>
-            </button>
-            <button
-              onClick={() => router.push('/shop')}
-              className={styles.actionCard}
-            >
-              <span className={styles.actionIcon}>🛍️</span>
-              <span className={styles.actionText}>Browse Shop</span>
-            </button>
-            <button
-              onClick={() => router.push('/favorites')}
-              className={styles.actionCard}
-            >
-              <span className={styles.actionIcon}>❤️</span>
-              <span className={styles.actionText}>My Favorites</span>
-            </button>
-            <button
-              onClick={() => router.push('/purchases')}
-              className={styles.actionCard}
-            >
-              <span className={styles.actionIcon}>📦</span>
-              <span className={styles.actionText}>My Orders</span>
-            </button>
-          </div>
-        </div>
 
         {/* Coming Soon */}
         <div className={styles.comingSoon}>
-          <p>🚀 More dashboard features coming soon!</p>
+          <p>CRUD products feature coming soon!</p>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Logo from './Logo'
 import styles from '@/styles/Navbar.module.css'
 import {
@@ -15,31 +15,77 @@ import {
   ArrowRightOnRectangleIcon,
   ArrowLeftOnRectangleIcon,
 } from '@heroicons/react/24/outline'
+import { toast } from 'react-toastify'
 
 // TODO: Descomentar cuando creemos los contexts
 // import { useCart } from '@/context/CartContext'
-// import { useAuth } from '@/context/AuthContext'
+
+interface UserSession {
+  id: string
+  username: string
+  name: string
+  email: string
+  role: 'Admin' | 'Customer'
+  isActive: boolean
+  loginTime: string
+}
 
 export default function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [user, setUser] = useState<UserSession | null>(null)
 
-  // TODO: Descomentar cuando creemos los contexts
+  // TODO: Descomentar cuando creemos CartContext
   // const { getItemCount } = useCart()
-  // const { user, logout, isAdmin } = useAuth()
   // const itemCount = getItemCount()
-  // const isAdminUser = isAdmin()
-
-  // Mock data mientras creamos los contexts
-  const user = null
+  
   const itemCount = 0
-  const isAdminUser = false
+  // const isAdminUser = user?.role === 'Admin' // Para usar cuando creemos el dashboard
+
+  // Leer usuario del localStorage
+  useEffect(() => {
+    const loadUser = () => {
+      const sessionData = localStorage.getItem('userSession')
+      if (sessionData) {
+        try {
+          const parsedUser = JSON.parse(sessionData)
+          setUser(parsedUser)
+        } catch (error) {
+          console.error('Error parsing user session:', error)
+          localStorage.removeItem('userSession')
+        }
+      }
+    }
+
+    loadUser()
+
+    // Escuchar cambios en el localStorage (cuando se hace login/logout en otra pestaña)
+    window.addEventListener('storage', loadUser)
+    
+    // Custom event para actualizar cuando se hace login en la misma pestaña
+    window.addEventListener('userSessionUpdate', loadUser)
+
+    return () => {
+      window.removeEventListener('storage', loadUser)
+      window.removeEventListener('userSessionUpdate', loadUser)
+    }
+  }, [])
 
   const isActive = (path: string) => pathname === path
 
   const handleLogout = () => {
-    // TODO: Implementar logout cuando tengamos AuthContext
-    console.log('Logout clicked')
+    // Limpiar sesión
+    localStorage.removeItem('userSession')
+    setUser(null)
+    
+    toast.info('You have been logged out successfully', {
+      position: 'top-right',
+      autoClose: 2000,
+    })
+    
+    // Redirigir al login
+    router.push('/login')
   }
 
   // Navigation items
@@ -67,8 +113,8 @@ export default function Navbar() {
               <UserIcon className={styles.avatarIcon} />
             </div>
             <div className={styles.userDetails}>
-              <p className={styles.userName}>Alex Doe</p>
-              <p className={styles.userEmail}>alex.doe@example.com</p>
+              <p className={styles.userName}>{user.username}</p>
+              <p className={styles.userEmail}>{user.role}</p>
             </div>
           </div>
         )}

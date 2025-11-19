@@ -3,32 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import axios from 'axios'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
-import Logo from '@/components/Logo'
 import { toast } from 'react-toastify'
 import styles from './login.module.css'
 import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
-// Usuarios hardcoded
-const usuariosHardcoded = [
-  {
-    username: 'susana',
-    password: 'admin123',
-    name: 'Susana Gutiérrez',
-    email: 'susana@techland.com',
-    role: 'Admin',
-    isActive: true,
-  },
-  {
-    username: 'maria',
-    password: 'holi123',
-    name: 'María Rodríguez',
-    email: 'maria@example.com',
-    role: 'Customer',
-    isActive: true,
-  },
-]
 
 export default function LoginPage() {
   const router = useRouter()
@@ -62,38 +43,55 @@ export default function LoginPage() {
       return
     }
 
-    // Simular delay de red
-    await new Promise(resolve => setTimeout(resolve, 800))
+    try {
+      // Llamar al API de login con axios
+      const { data } = await axios.post('/api/auth/login', {
+        username: user,
+        password: pass,
+      })
 
-    const usuarioEncontrado = usuariosHardcoded.find(
-      (u) => u.username.toLowerCase() === user.toLowerCase() && u.password === pass
-    )
+      if (data.success) {
+        // Login exitoso
+        const sessionData = {
+          id: data.user.id,
+          username: data.user.username,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role,
+          isActive: data.user.isActive,
+          loginTime: new Date().toISOString(),
+        }
 
-    if (usuarioEncontrado) {
-      const sessionData = {
-        username: usuarioEncontrado.username,
-        name: usuarioEncontrado.name,
-        email: usuarioEncontrado.email,
-        role: usuarioEncontrado.role,
-        isActive: usuarioEncontrado.isActive,
-        loginTime: new Date().toISOString(),
+        localStorage.setItem('userSession', JSON.stringify(sessionData))
+        
+        // Disparar evento para actualizar el Navbar
+        window.dispatchEvent(new Event('userSessionUpdate'))
+        
+        toast.success(`Welcome back, ${data.user.name}! 👋`, {
+          position: 'top-right',
+          autoClose: 2000,
+        })
+
+        setTimeout(() => {
+          router.push('/')
+        }, 500)
       }
+    } catch (error) {
+      console.error('Login error:', error)
 
-      localStorage.setItem('userSession', JSON.stringify(sessionData))
-      
-      toast.success(`Welcome back, ${usuarioEncontrado.name}! 👋`, {
-        position: 'top-right',
-        autoClose: 2000,
-      })
-
-      setTimeout(() => {
-        router.push('/')
-      }, 500)
-    } else {
-      setError('Invalid username or password')
-      toast.error('Login failed. Please check your credentials.', {
-        position: 'top-right',
-      })
+      // Manejar errores de axios
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessage = error.response.data.error || 'Invalid username or password'
+        setError(errorMessage)
+        toast.error(errorMessage, {
+          position: 'top-right',
+        })
+      } else {
+        setError('Connection error. Please try again.')
+        toast.error('Connection error. Please try again.', {
+          position: 'top-right',
+        })
+      }
     }
 
     setLoading(false)
@@ -102,28 +100,11 @@ export default function LoginPage() {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.loginCard}>
-        {/* Logo */}
-        <div className={styles.logoWrapper}>
-          <Logo size="lg" />
-        </div>
 
         {/* Title */}
         <div className={styles.header}>
           <h1 className={styles.title}>Welcome Back</h1>
           <p className={styles.subtitle}>Sign in to continue to Techland</p>
-        </div>
-
-        {/* Demo Credentials */}
-        <div className={styles.demoCredentials}>
-          <p className={styles.demoTitle}>🔑 Demo Credentials:</p>
-          <div className={styles.demoGrid}>
-            <div className={styles.demoItem}>
-              <strong>Admin:</strong> susana / admin123
-            </div>
-            <div className={styles.demoItem}>
-              <strong>Customer:</strong> maria / holi123
-            </div>
-          </div>
         </div>
 
         {/* Form */}
@@ -174,7 +155,7 @@ export default function LoginPage() {
         {/* Register Link */}
         <div className={styles.footer}>
           <p className={styles.footerText}>
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register" className={styles.footerLink}>
               Sign up
             </Link>

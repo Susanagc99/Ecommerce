@@ -9,7 +9,7 @@ export default function FavoritesPage() {
         WebkitTextFillColor: 'transparent',
         marginBottom: '1rem'
       }}>
-        ❤️ My Favorites
+        My Favorites
       </h1>
       <p style={{ fontSize: '1.125rem', color: '#6B7280', marginBottom: '2rem' }}>
         Your favorite products will appear here
@@ -21,7 +21,7 @@ export default function FavoritesPage() {
         border: '1px solid #E5E7EB'
       }}>
         <p style={{ fontSize: '1rem', color: '#9CA3AF' }}>
-          🔜 Coming soon! Start adding products to your favorites.
+          Coming soon! Start adding products to your favorites.
         </p>
       </div>
     </div>

@@ -30,11 +30,7 @@ export default function HeroSection() {
       <div className={styles.content}>
         <div className={styles.container}>
           <div className={styles.textContent}>
-            <div className={styles.badge}>
-              <span className={styles.badgeText}>New Arrivals 🚀</span>
-            </div>
-            
-            <h1 className={styles.title}>
+              <h1 className={styles.title}>
               Find Your Perfect
               <br />
               <span className={styles.titleGradient}>Gadgets</span>
@@ -47,12 +43,12 @@ export default function HeroSection() {
             
             <div className={styles.ctas}>
               <Link href="/shop">
-                <Button size="lg" variant="primary">
+                <Button size="md" variant="primary">
                   Shop Now
                 </Button>
               </Link>
               <Link href="/about">
-                <Button size="lg" variant="outline">
+                <Button size="md" variant="outline">
                   Learn More
                 </Button>
               </Link>

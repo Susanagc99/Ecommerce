@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import axios from 'axios'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
-import Logo from '@/components/Logo'
 import { toast } from 'react-toastify'
 import styles from '../login/login.module.css'
 import { UserIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline'
@@ -75,30 +75,64 @@ export default function RegisterPage() {
 
     setLoading(true)
 
-    // Simular registro (agregar delay de red)
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    try {
+      // Llamar al API de registro con axios
+      const { data } = await axios.post('/api/auth/register', {
+        name: formData.name,
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
+      })
 
-    // En producción, aquí harías una llamada a tu API
-    toast.success('Account created successfully! 🎉', {
-      position: 'top-right',
-      autoClose: 2000,
-    })
+      if (data.success) {
+        // Registro exitoso
+        toast.success('Account created successfully!', {
+          position: 'top-right',
+          autoClose: 2000,
+        })
 
-    // Auto-login después del registro
-    const sessionData = {
-      username: formData.username,
-      name: formData.name,
-      email: formData.email,
-      role: 'Customer',
-      isActive: true,
-      loginTime: new Date().toISOString(),
+        // Auto-login después del registro
+        const sessionData = {
+          id: data.user.id,
+          username: data.user.username,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role,
+          isActive: data.user.isActive,
+          loginTime: new Date().toISOString(),
+        }
+
+        localStorage.setItem('userSession', JSON.stringify(sessionData))
+
+        // Disparar evento para actualizar el Navbar
+        window.dispatchEvent(new Event('userSessionUpdate'))
+
+        setTimeout(() => {
+          router.push('/')
+        }, 800)
+      }
+    } catch (error) {
+      console.error('Register error:', error)
+      
+      // Manejar errores de axios
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessage = error.response.data.error || 'Registration failed. Please try again.'
+        toast.error(errorMessage, {
+          position: 'top-right',
+        })
+
+        // Establecer errores específicos si los hay
+        if (errorMessage.includes('Username')) {
+          setErrors({ ...errors, username: errorMessage })
+        } else if (errorMessage.includes('Email')) {
+          setErrors({ ...errors, email: errorMessage })
+        }
+      } else {
+        toast.error('Connection error. Please try again.', {
+          position: 'top-right',
+        })
+      }
     }
-
-    localStorage.setItem('userSession', JSON.stringify(sessionData))
-
-    setTimeout(() => {
-      router.push('/')
-    }, 800)
 
     setLoading(false)
   }
@@ -114,10 +148,6 @@ export default function RegisterPage() {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.loginCard}>
-        {/* Logo */}
-        <div className={styles.logoWrapper}>
-          <Logo size="lg" />
-        </div>
 
         {/* Title */}
         <div className={styles.header}>
