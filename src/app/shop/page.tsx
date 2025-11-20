@@ -1,33 +1,70 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ProductGrid from '@/components/ProductGrid'
 import Pagination from '@/components/Pagination'
 import Input from '@/components/Input'
-import productsData from '@/data/products.json'
+import { getProducts } from '@/services/products'
+import { CATEGORIES } from '@/constants/categories'
 import styles from './shop.module.css'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { toast } from 'react-toastify'
 
-const ITEMS_PER_PAGE = 9
+const ITEMS_PER_PAGE = 8
+
+interface Product {
+  _id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  subcategory: string
+  image: string
+  stock: number
+  featured: boolean
+}
 
 export default function ShopPage() {
   const searchParams = useSearchParams()
   const categoryFromUrl = searchParams.get('category') || ''
 
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl)
   const [currentPage, setCurrentPage] = useState(1)
 
-  // Get unique categories
+  // Get unique categories from CATEGORIES constant
   const categories = useMemo(() => {
-    const cats = Array.from(new Set(productsData.map((p) => p.category)))
-    return ['All', ...cats]
+    return ['All', ...Object.keys(CATEGORIES)]
+  }, [])
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true)
+        const response = await getProducts()
+        if (response.success) {
+          setProducts(response.data)
+        } else {
+          toast.error('Error al cargar productos')
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error)
+        toast.error('Error al cargar productos')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
   }, [])
 
   // Filter products
   const filteredProducts = useMemo(() => {
-    return productsData.filter((product) => {
+    return products.filter((product) => {
       const matchesSearch =
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -39,7 +76,7 @@ export default function ShopPage() {
 
       return matchesSearch && matchesCategory
     })
-  }, [searchTerm, selectedCategory])
+  }, [products, searchTerm, selectedCategory])
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
@@ -50,9 +87,23 @@ export default function ShopPage() {
   )
 
   // Reset to page 1 when filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm, selectedCategory])
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className={styles.shop}>
+        <div className={styles.container}>
+          <div className={styles.loading}>
+            <div className={styles.spinner} />
+            <p>Cargando productos...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.shop}>
@@ -113,7 +164,13 @@ export default function ShopPage() {
         </div>
 
         {/* Products Grid */}
-        <ProductGrid products={paginatedProducts} />
+        {filteredProducts.length === 0 ? (
+          <div className={styles.noProducts}>
+            <p>No se encontraron productos.</p>
+          </div>
+        ) : (
+          <ProductGrid products={paginatedProducts} />
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (

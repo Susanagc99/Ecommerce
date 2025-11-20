@@ -4,7 +4,7 @@ import ProductCard from './ProductCard'
 import styles from '@/styles/ProductGrid.module.css'
 
 export interface Product {
-  id: string
+  _id: string
   name: string
   price: number
   image: string
@@ -51,8 +51,8 @@ export default function ProductGrid({ products, loading = false }: ProductGridPr
     <div className={styles.grid}>
       {products.map((product) => (
         <ProductCard
-          key={product.id}
-          id={product.id}
+          key={product._id}
+          id={product._id}
           name={product.name}
           price={product.price}
           image={product.image}

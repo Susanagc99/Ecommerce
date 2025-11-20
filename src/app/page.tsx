@@ -1,15 +1,51 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import HeroSection from '@/components/HeroSection'
 import ProductGrid from '@/components/ProductGrid'
 import Button from '@/components/Button'
-import productsData from '@/data/products.json'
+import { getProducts } from '@/services/products'
 import styles from './page.module.css'
+import { toast } from 'react-toastify'
+
+interface Product {
+  _id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  subcategory: string
+  image: string
+  stock: number
+  featured: boolean
+}
 
 export default function Home() {
-  // Get featured products
-  const featuredProducts = productsData
-    .filter((product) => product.featured)
-    .slice(0, 6)
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch featured products from API
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        setLoading(true)
+        const response = await getProducts({ featured: true })
+        if (response.success) {
+          setFeaturedProducts(response.data.slice(0, 6))
+        } else {
+          toast.error('Error al cargar productos destacados')
+        }
+      } catch (error) {
+        console.error('Error fetching featured products:', error)
+        toast.error('Error al cargar productos destacados')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFeaturedProducts()
+  }, [])
 
   // Categories for quick links
   const categories = [
@@ -55,15 +91,17 @@ export default function Home() {
             </p>
           </div>
 
-          <ProductGrid products={featuredProducts} />
+          <ProductGrid products={featuredProducts} loading={loading} />
 
-          <div className={styles.ctaWrapper}>
-            <Link href="/shop">
-              <Button size="lg" variant="primary">
-                View All Products
-              </Button>
-            </Link>
-          </div>
+          {!loading && (
+            <div className={styles.ctaWrapper}>
+              <Link href="/shop">
+                <Button size="lg" variant="primary">
+                  View All Products
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

@@ -1,113 +1,138 @@
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
+import dbConnection from "@/lib/database";
+import cloudinary from "@/lib/cloudinary";
+import Product from "@/database/models/products";
 
-const PRODUCTS_FILE = path.join(process.cwd(), "src/data/products.json");
-
-// GET - Obtener un producto por ID
+/**
+ * GET /api/products/[id]
+ * Obtiene un producto por su ID
+ */
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const fileContent = await fs.readFile(PRODUCTS_FILE, "utf-8");
-        const products = JSON.parse(fileContent);
+        await dbConnection();
+        const { id } = await params;
 
-        const product = products.find((p: any) => p.id === params.id);
+        const product = await Product.findById(id).lean();
 
         if (!product) {
-            return NextResponse.json({ error: "Product not found" }, { status: 404 });
+            return NextResponse.json(
+                { success: false, message: "Producto no encontrado" },
+                { status: 404 }
+            );
         }
 
-        return NextResponse.json(product, { status: 200 });
-    } catch (error) {
-        console.error("Error reading product:", error);
         return NextResponse.json(
-            { error: "Failed to fetch product" },
-            { status: 500 }
-        );
-    }
-}
-
-// PUT - Actualizar un producto
-export async function PUT(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
-    try {
-        const body = await request.json();
-
-        // Leer productos existentes
-        const fileContent = await fs.readFile(PRODUCTS_FILE, "utf-8");
-        const products = JSON.parse(fileContent);
-
-        // Encontrar el índice del producto
-        const productIndex = products.findIndex((p: any) => p.id === params.id);
-
-        if (productIndex === -1) {
-            return NextResponse.json({ error: "Product not found" }, { status: 404 });
-        }
-
-        // Actualizar el producto manteniendo el ID original
-        const updatedProduct = {
-            ...products[productIndex],
-            ...body,
-            id: params.id, // Asegurar que el ID no cambie
-            price: body.price ? parseFloat(body.price) : products[productIndex].price,
-            stock: body.stock ? parseInt(body.stock) : products[productIndex].stock,
-        };
-
-        products[productIndex] = updatedProduct;
-
-        // Guardar en el archivo
-        await fs.writeFile(
-            PRODUCTS_FILE,
-            JSON.stringify(products, null, 2),
-            "utf-8"
-        );
-
-        return NextResponse.json(updatedProduct, { status: 200 });
-    } catch (error) {
-        console.error("Error updating product:", error);
-        return NextResponse.json(
-            { error: "Failed to update product" },
-            { status: 500 }
-        );
-    }
-}
-
-// DELETE - Eliminar un producto
-export async function DELETE(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
-    try {
-        // Leer productos existentes
-        const fileContent = await fs.readFile(PRODUCTS_FILE, "utf-8");
-        const products = JSON.parse(fileContent);
-
-        // Filtrar el producto a eliminar
-        const filteredProducts = products.filter((p: any) => p.id !== params.id);
-
-        if (filteredProducts.length === products.length) {
-            return NextResponse.json({ error: "Product not found" }, { status: 404 });
-        }
-
-        // Guardar en el archivo
-        await fs.writeFile(
-            PRODUCTS_FILE,
-            JSON.stringify(filteredProducts, null, 2),
-            "utf-8"
-        );
-
-        return NextResponse.json(
-            { message: "Product deleted successfully" },
+            {
+                success: true,
+                data: product,
+            },
             { status: 200 }
         );
     } catch (error) {
-        console.error("Error deleting product:", error);
+        console.error("Error al obtener producto:", error);
         return NextResponse.json(
-            { error: "Failed to delete product" },
+            {
+                success: false,
+                message: "Error al obtener el producto",
+                error: error instanceof Error ? error.message : "Error desconocido",
+            },
+            { status: 500 }
+        );
+    }
+}
+
+/**
+ * PUT /api/products/[id]
+ * Actualiza un producto existente (próximamente con soporte para cambiar imagen)
+ */
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        // TODO: Implementar actualización completa con soporte para cambiar imagen
+        await dbConnection();
+        await params; // Para evitar warning de unused
+        
+        return NextResponse.json(
+            { success: false, message: "Actualización de productos próximamente" },
+            { status: 501 }
+        );
+    } catch (error) {
+        console.error("Error al actualizar producto:", error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: "Error al actualizar el producto",
+                error: error instanceof Error ? error.message : "Error desconocido",
+            },
+            { status: 500 }
+        );
+    }
+}
+
+/**
+ * DELETE /api/products/[id]
+ * Elimina un producto y su imagen de Cloudinary
+ */
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        await dbConnection();
+        const { id } = await params;
+
+        // Buscar el producto
+        const product = await Product.findById(id);
+
+        if (!product) {
+            return NextResponse.json(
+                { success: false, message: "Producto no encontrado" },
+                { status: 404 }
+            );
+        }
+
+        // Extraer el public_id de Cloudinary de la URL de la imagen
+        // Ejemplo: https://res.cloudinary.com/.../techland/products/abc123.jpg
+        // public_id sería: techland/products/abc123
+        try {
+            const imageUrl = product.image;
+            const urlParts = imageUrl.split("/");
+            const filename = urlParts[urlParts.length - 1];
+            const publicId = `techland/products/${filename.split(".")[0]}`;
+
+            // Eliminar imagen de Cloudinary
+            await cloudinary.uploader.destroy(publicId);
+            console.log("✅ Imagen eliminada de Cloudinary:", publicId);
+        } catch (cloudinaryError) {
+            console.error("⚠️ Error al eliminar imagen de Cloudinary:", cloudinaryError);
+            // Continuar con la eliminación del producto aunque falle Cloudinary
+        }
+
+        // Eliminar producto de MongoDB
+        await Product.findByIdAndDelete(id);
+
+        console.log("✅ Producto eliminado de MongoDB:", id);
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: "Producto eliminado exitosamente",
+            },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error("❌ Error al eliminar producto:", error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: "Error al eliminar el producto",
+                error: error instanceof Error ? error.message : "Error desconocido",
+            },
             { status: 500 }
         );
     }

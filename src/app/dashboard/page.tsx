@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Button from '@/components/Button'
 import { toast } from 'react-toastify'
 import { formatPrice } from '@/lib/utils'
+import { createProduct } from '@/services/products'
+import { CATEGORIES, type CategoryType } from '@/constants/categories'
 import styles from './dashboard.module.css'
 import {
   PencilIcon,
@@ -23,7 +25,7 @@ interface UserSession {
 }
 
 interface Product {
-  id: string
+  _id: string
   name: string
   description: string
   price: number
@@ -32,6 +34,17 @@ interface Product {
   image: string
   stock: number
   featured: boolean
+}
+
+interface FormErrors {
+  name?: string
+  description?: string
+  price?: string
+  category?: string
+  subcategory?: string
+  file?: string
+  stock?: string
+  submit?: string
 }
 
 export default function DashboardPage() {
@@ -47,10 +60,13 @@ export default function DashboardPage() {
     price: '',
     category: '',
     subcategory: '',
-    image: '',
     stock: '',
     featured: false,
   })
+  const [file, setFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     const session = localStorage.getItem('userSession')
@@ -76,8 +92,8 @@ export default function DashboardPage() {
       setLoading(true)
       const response = await fetch('/api/products')
       if (response.ok) {
-        const data = await response.json()
-        setProducts(data)
+        const result = await response.json()
+        setProducts(result.data || [])
       } else {
         toast.error('Failed to fetch products')
       }
@@ -98,10 +114,11 @@ export default function DashboardPage() {
         price: product.price.toString(),
         category: product.category,
         subcategory: product.subcategory,
-        image: product.image,
         stock: product.stock.toString(),
         featured: product.featured,
       })
+      setImagePreview(product.image)
+      setFile(null)
     } else {
       setEditingProduct(null)
       setFormData({
@@ -110,11 +127,13 @@ export default function DashboardPage() {
         price: '',
         category: '',
         subcategory: '',
-        image: '',
         stock: '',
         featured: false,
       })
+      setImagePreview('')
+      setFile(null)
     }
+    setErrors({})
     setShowModal(true)
   }
 
@@ -127,50 +146,161 @@ export default function DashboardPage() {
       price: '',
       category: '',
       subcategory: '',
-      image: '',
       stock: '',
       featured: false,
     })
+    setFile(null)
+    setImagePreview('')
+    setErrors({})
+    setIsSubmitting(false)
+  }
+
+  // Validar formulario
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {}
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'El nombre del producto es requerido'
+    } else if (formData.name.trim().length < 3) {
+      newErrors.name = 'El nombre debe tener al menos 3 caracteres'
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = 'La descripción es requerida'
+    }
+
+    if (!formData.price) {
+      newErrors.price = 'El precio es requerido'
+    } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
+      newErrors.price = 'El precio debe ser un número válido mayor o igual a 0'
+    }
+
+    if (!formData.category) {
+      newErrors.category = 'La categoría es requerida'
+    }
+
+    if (!formData.subcategory) {
+      newErrors.subcategory = 'La subcategoría es requerida'
+    }
+
+    // Validar archivo solo si estamos creando un producto nuevo
+    if (!editingProduct && !file) {
+      newErrors.file = 'Debes seleccionar una imagen'
+    } else if (file && !isValidFileType(file)) {
+      newErrors.file = 'Solo se permiten imágenes (JPEG, JPG, PNG, WEBP)'
+    } else if (file && file.size > 5 * 1024 * 1024) {
+      newErrors.file = 'La imagen no debe superar 5MB'
+    }
+
+    if (formData.stock && (isNaN(parseInt(formData.stock)) || parseInt(formData.stock) < 0)) {
+      newErrors.stock = 'El stock debe ser un número válido mayor o igual a 0'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  // Validar tipo de archivo
+  const isValidFileType = (file: File): boolean => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    return allowedTypes.includes(file.type)
+  }
+
+  // Manejar cambio de archivo
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
+    if (selectedFile) {
+      setFile(selectedFile)
+      
+      // Crear preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(selectedFile)
+      
+      // Limpiar error de archivo
+      if (errors.file) {
+        setErrors(prev => ({ ...prev, file: undefined }))
+      }
+    }
+  }
+
+  // Manejar cambio de inputs
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+    
+    // Limpiar subcategoría si se cambia la categoría
+    if (name === 'category') {
+      setFormData(prev => ({ ...prev, subcategory: '' }))
+    }
+
+    // Limpiar error del campo
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    try {
-      const url = editingProduct
-        ? `/api/products/${editingProduct.id}`
-        : '/api/products'
-      
-      const method = editingProduct ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
 
-      if (response.ok) {
-        toast.success(
-          editingProduct
-            ? 'Product updated successfully! ✅'
-            : 'Product created successfully! 🎉'
-        )
-        handleCloseModal()
-        fetchProducts()
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+    setErrors({})
+
+    try {
+      if (editingProduct) {
+        // TODO: Implementar actualización de producto
+        toast.info('Actualización de productos próximamente')
       } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to save product')
+        // Crear nuevo producto
+        if (!file) {
+          throw new Error('Archivo no disponible')
+        }
+
+        const response = await createProduct({
+          name: formData.name,
+          description: formData.description,
+          price: formData.price,
+          category: formData.category,
+          subcategory: formData.subcategory,
+          stock: formData.stock || '0',
+          featured: formData.featured,
+          file,
+        })
+
+        if (response.success) {
+          toast.success('Producto creado exitosamente! 🎉')
+          handleCloseModal()
+          fetchProducts()
+        }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving product:', error)
-      toast.error('Error saving product')
+      if (error instanceof Error && 'response' in error) {
+        const axiosError = error as { response?: { data?: { message?: string } } }
+        setErrors({
+          submit: axiosError.response?.data?.message || 'Error al guardar producto'
+        })
+      } else {
+        setErrors({
+          submit: 'Error al guardar producto'
+        })
+      }
+      toast.error('Error al guardar producto')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
+    if (!confirm('¿Estás seguro de eliminar este producto?')) return
 
     try {
       const response = await fetch(`/api/products/${id}`, {
@@ -178,15 +308,20 @@ export default function DashboardPage() {
       })
 
       if (response.ok) {
-        toast.success('Product deleted successfully! 🗑️')
+        toast.success('Producto eliminado exitosamente! 🗑️')
         fetchProducts()
       } else {
-        toast.error('Failed to delete product')
+        toast.error('Error al eliminar producto')
       }
     } catch (error) {
       console.error('Error deleting product:', error)
-      toast.error('Error deleting product')
+      toast.error('Error al eliminar producto')
     }
+  }
+
+  // Obtener subcategorías según la categoría seleccionada
+  const getSubcategories = (category: string): readonly string[] => {
+    return CATEGORIES[category as CategoryType] || []
   }
 
   if (!user || loading) {
@@ -229,8 +364,8 @@ export default function DashboardPage() {
             </thead>
             <tbody>
               {products.map((product) => (
-                <tr key={product.id}>
-                  <td>{product.id}</td>
+                <tr key={product._id}>
+                  <td>{product._id.slice(-6)}</td>
                   <td>
                     <img
                       src={product.image}
@@ -278,7 +413,7 @@ export default function DashboardPage() {
                         <PencilIcon className={styles.actionIcon} />
                       </button>
                       <button
-                        onClick={() => handleDelete(product.id)}
+                        onClick={() => handleDelete(product._id)}
                         className={styles.deleteBtn}
                         title="Delete"
                       >
@@ -305,113 +440,207 @@ export default function DashboardPage() {
 
               <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.formGrid}>
+                  {/* Nombre del Producto */}
                   <div className={styles.formGroup}>
-                    <label>Product Name *</label>
+                    <label htmlFor="name">Nombre del Producto *</label>
                     <input
+                      id="name"
+                      name="name"
                       type="text"
                       value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      required
+                      onChange={handleInputChange}
+                      placeholder="Ej: PlayStation 5 Console"
+                      disabled={isSubmitting}
                     />
+                    {errors.name && (
+                      <p className={styles.errorText}>{errors.name}</p>
+                    )}
                   </div>
 
+                  {/* Precio */}
                   <div className={styles.formGroup}>
-                    <label>Price (COP) *</label>
+                    <label htmlFor="price">Precio (COP) *</label>
                     <input
+                      id="price"
+                      name="price"
                       type="number"
                       value={formData.price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, price: e.target.value })
-                      }
-                      required
+                      onChange={handleInputChange}
+                      placeholder="2999000"
                       min="0"
                       step="1"
+                      disabled={isSubmitting}
                     />
+                    {errors.price && (
+                      <p className={styles.errorText}>{errors.price}</p>
+                    )}
                   </div>
 
+                  {/* Categoría */}
                   <div className={styles.formGroup}>
-                    <label>Category *</label>
-                    <input
-                      type="text"
+                    <label htmlFor="category">Categoría *</label>
+                    <select
+                      id="category"
+                      name="category"
                       value={formData.category}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
-                      }
-                      required
-                    />
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
+                    >
+                      <option value="">Selecciona una categoría</option>
+                      {Object.keys(CATEGORIES).map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.category && (
+                      <p className={styles.errorText}>{errors.category}</p>
+                    )}
                   </div>
 
+                  {/* Subcategoría */}
                   <div className={styles.formGroup}>
-                    <label>Subcategory *</label>
-                    <input
-                      type="text"
+                    <label htmlFor="subcategory">Subcategoría *</label>
+                    <select
+                      id="subcategory"
+                      name="subcategory"
                       value={formData.subcategory}
-                      onChange={(e) =>
-                        setFormData({ ...formData, subcategory: e.target.value })
-                      }
-                      required
-                    />
+                      onChange={handleInputChange}
+                      disabled={!formData.category || isSubmitting}
+                    >
+                      <option value="">
+                        {formData.category
+                          ? 'Selecciona una subcategoría'
+                          : 'Primero selecciona una categoría'}
+                      </option>
+                      {formData.category &&
+                        getSubcategories(formData.category).map((subcat) => (
+                          <option key={subcat} value={subcat}>
+                            {subcat}
+                          </option>
+                        ))}
+                    </select>
+                    {errors.subcategory && (
+                      <p className={styles.errorText}>{errors.subcategory}</p>
+                    )}
                   </div>
 
+                  {/* Stock */}
                   <div className={styles.formGroup}>
-                    <label>Stock *</label>
+                    <label htmlFor="stock">Stock</label>
                     <input
+                      id="stock"
+                      name="stock"
                       type="number"
                       value={formData.stock}
-                      onChange={(e) =>
-                        setFormData({ ...formData, stock: e.target.value })
-                      }
-                      required
+                      onChange={handleInputChange}
+                      placeholder="15"
                       min="0"
+                      disabled={isSubmitting}
                     />
+                    {errors.stock && (
+                      <p className={styles.errorText}>{errors.stock}</p>
+                    )}
                   </div>
 
+                  {/* Imagen */}
                   <div className={styles.formGroup}>
-                    <label>Image URL *</label>
+                    <label htmlFor="file">
+                      Imagen del Producto {!editingProduct && '*'}
+                    </label>
                     <input
-                      type="url"
-                      value={formData.image}
-                      onChange={(e) =>
-                        setFormData({ ...formData, image: e.target.value })
-                      }
-                      required
+                      id="file"
+                      name="file"
+                      type="file"
+                      onChange={handleFileChange}
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      disabled={isSubmitting}
                     />
+                    <p className={styles.helpText}>
+                      Formatos: JPG, PNG, WEBP (máximo 5MB)
+                    </p>
+                    {file && (
+                      <div className={styles.fileInfo}>
+                        <p className={styles.fileName}>
+                          📄 {file.name}
+                        </p>
+                        <p className={styles.fileSize}>
+                          Tamaño: {(file.size / 1024 / 1024).toFixed(2)}MB
+                        </p>
+                      </div>
+                    )}
+                    {errors.file && (
+                      <p className={styles.errorText}>{errors.file}</p>
+                    )}
                   </div>
 
+                  {/* Description - Ocupa todo el ancho */}
                   <div className={styles.formGroupFull}>
-                    <label>Description *</label>
+                    <label htmlFor="description">Descripción *</label>
                     <textarea
+                      id="description"
+                      name="description"
                       value={formData.description}
-                      onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                      }
-                      required
+                      onChange={handleInputChange}
+                      placeholder="Describe las características del producto..."
                       rows={3}
+                      disabled={isSubmitting}
                     />
+                    {errors.description && (
+                      <p className={styles.errorText}>{errors.description}</p>
+                    )}
                   </div>
 
+                  {/* Preview de Imagen */}
+                  {imagePreview && (
+                    <div className={styles.formGroupFull}>
+                      <label>Vista Previa</label>
+                      <div className={styles.imagePreview}>
+                        <img src={imagePreview} alt="Preview" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Featured Checkbox */}
                   <div className={styles.formGroupCheckbox}>
                     <label>
                       <input
                         type="checkbox"
+                        name="featured"
                         checked={formData.featured}
                         onChange={(e) =>
                           setFormData({ ...formData, featured: e.target.checked })
                         }
+                        disabled={isSubmitting}
                       />
-                      <span>Featured Product</span>
+                      <span>Producto Destacado</span>
                     </label>
                   </div>
                 </div>
 
+                {/* Mensaje de error general */}
+                {errors.submit && (
+                  <div className={styles.errorAlert}>
+                    <p>{errors.submit}</p>
+                  </div>
+                )}
+
+                {/* Botones */}
                 <div className={styles.modalActions}>
-                  <Button type="button" onClick={handleCloseModal} variant="outline">
-                    Cancel
+                  <Button
+                    type="button"
+                    onClick={handleCloseModal}
+                    variant="outline"
+                    disabled={isSubmitting}
+                  >
+                    Cancelar
                   </Button>
-                  <Button type="submit" variant="primary">
-                    {editingProduct ? 'Update Product' : 'Create Product'}
+                  <Button type="submit" variant="primary" disabled={isSubmitting}>
+                    {isSubmitting
+                      ? 'Guardando...'
+                      : editingProduct
+                      ? 'Actualizar Producto'
+                      : 'Crear Producto'}
                   </Button>
                 </div>
               </form>

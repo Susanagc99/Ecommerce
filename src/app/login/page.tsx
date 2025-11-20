@@ -67,7 +67,7 @@ export default function LoginPage() {
         // Disparar evento para actualizar el Navbar
         window.dispatchEvent(new Event('userSessionUpdate'))
         
-        toast.success(`Welcome back, ${data.user.name}! 👋`, {
+        toast.success(`Welcome back, ${data.user.name}!`, {
           position: 'top-right',
           autoClose: 2000,
         })

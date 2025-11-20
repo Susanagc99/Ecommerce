@@ -1,88 +1,185 @@
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
+import dbConnection from "@/lib/database";
+import cloudinary from "@/lib/cloudinary";
+import Product from "@/database/models/products";
 
-const PRODUCTS_FILE = path.join(process.cwd(), "src/data/products.json");
-
-// GET - Obtener todos los productos
-export async function GET() {
+/**
+ * GET /api/products
+ * Obtiene la lista de productos con filtros opcionales
+ * Query params: category, subcategory, featured, search
+ */
+export async function GET(request: NextRequest) {
     try {
-        const fileContent = await fs.readFile(PRODUCTS_FILE, "utf-8");
-        const products = JSON.parse(fileContent);
+        await dbConnection();
 
-        return NextResponse.json(products, { status: 200 });
-    } catch (error) {
-        console.error("Error reading products:", error);
+        // Obtener parámetros de búsqueda
+        const { searchParams } = new URL(request.url);
+        const category = searchParams.get("category");
+        const subcategory = searchParams.get("subcategory");
+        const featured = searchParams.get("featured");
+        const search = searchParams.get("search");
+
+        // Construir filtros dinámicamente
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const filters: any = {};
+
+        if (category) filters.category = category;
+        if (subcategory) filters.subcategory = subcategory;
+        if (featured === "true") filters.featured = true;
+        
+        // Búsqueda por texto en name o description
+        if (search) {
+            filters.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { description: { $regex: search, $options: "i" } }
+            ];
+        }
+
+        // Obtener productos de la base de datos
+        const products = await Product.find(filters)
+            .sort({ createdAt: -1 }) // Más recientes primero
+            .lean(); // Convierte a objetos JavaScript planos (mejor performance)
+
         return NextResponse.json(
-            { error: "Failed to fetch products" },
+            {
+                success: true,
+                count: products.length,
+                data: products,
+            },
+            { status: 200 }
+        );
+
+    } catch (error) {
+        console.error("Error al obtener productos:", error);
+        return NextResponse.json(
+            { 
+                success: false, 
+                message: "Error al obtener los productos",
+                error: error instanceof Error ? error.message : "Error desconocido"
+            },
             { status: 500 }
         );
     }
 }
-// Aplicar claudinary para subir las imagenes
-// POST - Crear un nuevo producto
+
+/**
+ * POST /api/products
+ * Crea un nuevo producto con imagen en Cloudinary
+ * Body: FormData con name, description, price, category, subcategory, stock, featured, file
+ */
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
+        // Obtener FormData del request
+        const formData = await request.formData();
 
-        // Validar datos requeridos
-        const requiredFields = [
-            "name",
-            "description",
-            "price",
-            "category",
-            "subcategory",
-            "image",
-            "stock",
-        ];
-        const missingFields = requiredFields.filter(
-            (field) => !body[field] && body[field] !== 0
-        );
+        // Extraer campos del FormData
+        const name = formData.get("name") as string;
+        const description = formData.get("description") as string;
+        const price = formData.get("price") as string;
+        const category = formData.get("category") as string;
+        const subcategory = formData.get("subcategory") as string;
+        const stock = formData.get("stock") as string;
+        const featured = formData.get("featured") as string;
+        const file = formData.get("file") as File;
 
-        if (missingFields.length > 0) {
+        // Validar campos requeridos
+        if (!name || !description || !price || !category || !subcategory || !file) {
             return NextResponse.json(
-                { error: `Missing required fields: ${missingFields.join(", ")}` },
+                { 
+                    success: false, 
+                    message: "Todos los campos son requeridos (name, description, price, category, subcategory, file)" 
+                },
                 { status: 400 }
             );
         }
 
-        // Leer productos existentes
-        const fileContent = await fs.readFile(PRODUCTS_FILE, "utf-8");
-        const products = JSON.parse(fileContent);
+        // Verificar que el file es válido
+        if (!(file instanceof File)) {
+            return NextResponse.json(
+                { success: false, message: "El archivo de imagen es inválido" },
+                { status: 400 }
+            );
+        }
 
-        // Generar ID único (encontrar el máximo ID actual y sumar 1)
-        const maxId = products.reduce((max: number, product: any) => {
-            const id = parseInt(product.id);
-            return id > max ? id : max;
-        }, 0);
+        // Validar tipo de archivo (solo imágenes)
+        const validImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+        if (!validImageTypes.includes(file.type)) {
+            return NextResponse.json(
+                { 
+                    success: false, 
+                    message: "Solo se permiten archivos de imagen (jpeg, jpg, png, webp)" 
+                },
+                { status: 400 }
+            );
+        }
 
-        const newProduct = {
-            id: (maxId + 1).toString(),
-            name: body.name,
-            description: body.description,
-            price: parseFloat(body.price),
-            category: body.category,
-            subcategory: body.subcategory,
-            image: body.image,
-            stock: parseInt(body.stock),
-            featured: body.featured || false,
-        };
+        // Convertir archivo a buffer y luego a Data URI para Cloudinary
+        const buffer = await file.arrayBuffer();
+        const dataUri = `data:${file.type};base64,${Buffer.from(buffer).toString("base64")}`;
 
-        // Agregar el nuevo producto
-        products.push(newProduct);
+        // Subir imagen a Cloudinary
+        const uploadResult = await cloudinary.uploader.upload(dataUri, {
+            folder: "techland/products", // Carpeta en Cloudinary
+            resource_type: "image",
+            transformation: [
+                { width: 800, height: 800, crop: "limit" }, // Limitar tamaño
+                { quality: "auto" }, // Calidad automática
+                { fetch_format: "auto" } // Formato automático
+            ]
+        });
 
-        // Guardar en el archivo
-        await fs.writeFile(
-            PRODUCTS_FILE,
-            JSON.stringify(products, null, 2),
-            "utf-8"
+        console.log("✅ Imagen subida a Cloudinary:", uploadResult.secure_url);
+
+        // Conectar a la base de datos
+        await dbConnection();
+
+        // Crear nuevo producto en MongoDB
+        const newProduct = new Product({
+            name,
+            description,
+            price: parseFloat(price),
+            category,
+            subcategory,
+            image: uploadResult.secure_url, // URL de Cloudinary
+            stock: stock ? parseInt(stock) : 0,
+            featured: featured === "true",
+        });
+
+        // Guardar producto
+        const savedProduct = await newProduct.save();
+
+        console.log("✅ Producto guardado en MongoDB:", savedProduct._id);
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: "Producto creado correctamente",
+                data: savedProduct,
+            },
+            { status: 201 }
         );
 
-        return NextResponse.json(newProduct, { status: 201 });
     } catch (error) {
-        console.error("Error creating product:", error);
+        console.error("❌ Error al crear producto:", error);
+        
+        // Manejo específico de errores de validación de Mongoose
+        if (error instanceof Error && error.name === "ValidationError") {
+            return NextResponse.json(
+                { 
+                    success: false, 
+                    message: "Error de validación",
+                    error: error.message
+                },
+                { status: 400 }
+            );
+        }
+
         return NextResponse.json(
-            { error: "Failed to create product" },
+            { 
+                success: false, 
+                message: "Error interno del servidor",
+                error: error instanceof Error ? error.message : "Error desconocido"
+            },
             { status: 500 }
         );
     }
