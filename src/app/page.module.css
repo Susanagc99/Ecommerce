@@ -35,7 +35,7 @@
 
 /* Categories Section */
 .categoriesGrid {
-  margin-top: 1rem;
+  margin-top: 2.5rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1.5rem;
@@ -103,7 +103,7 @@
 
 /* Featured Section */
 .featuredSection {
-  padding: 5rem 0;
+  padding: 3rem 0;
 }
 
 .ctaWrapper {
