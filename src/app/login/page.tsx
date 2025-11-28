@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { signIn } from 'next-auth/react'
 import axios from 'axios'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
@@ -63,10 +64,10 @@ export default function LoginPage() {
         }
 
         localStorage.setItem('userSession', JSON.stringify(sessionData))
-        
+
         // Disparar evento para actualizar el Navbar
         window.dispatchEvent(new Event('userSessionUpdate'))
-        
+
         toast.success(`Welcome back, ${data.user.name}!`, {
           position: 'top-right',
           autoClose: 2000,
@@ -153,6 +154,25 @@ export default function LoginPage() {
         </form>
 
         {/* Register Link */}
+        <div className={styles.divider}>
+          <span>OR</span>
+        </div>
+
+        <Button
+          type="button"
+          variant="secondary"
+          fullWidth
+          onClick={() => signIn('google', { callbackUrl: '/' })}
+          className={styles.googleButton}
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google"
+            className={styles.googleIcon}
+          />
+          Sign in with Google
+        </Button>
+
         <div className={styles.footer}>
           <p className={styles.footerText}>
             Don&apos;t have an account?{' '}

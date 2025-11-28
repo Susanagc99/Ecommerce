@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useSession, signOut } from "next-auth/react"
 import styles from '@/styles/Navbar.module.css'
 import {
   HeartIcon,
@@ -35,13 +36,25 @@ interface UserSession {
 export default function Navbar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { data: session } = useSession()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState<UserSession | null>(null)
+  const [localUser, setLocalUser] = useState<UserSession | null>(null)
+
+  // Combine session user and local user
+  const user = session?.user ? {
+    id: 'google-user',
+    username: session.user.name || 'User',
+    name: session.user.name || 'User',
+    email: session.user.email || '',
+    role: 'Customer' as const,
+    isActive: true,
+    loginTime: new Date().toISOString()
+  } : localUser
 
   // TODO: Descomentar cuando creemos CartContext
   // const { getItemCount } = useCart()
   // const itemCount = getItemCount()
-  
+
   const itemCount = 0
 
   // Leer usuario del localStorage
@@ -51,11 +64,13 @@ export default function Navbar() {
       if (sessionData) {
         try {
           const parsedUser = JSON.parse(sessionData)
-          setUser(parsedUser)
+          setLocalUser(parsedUser)
         } catch (error) {
           console.error('Error parsing user session:', error)
           localStorage.removeItem('userSession')
         }
+      } else {
+        setLocalUser(null)
       }
     }
 
@@ -73,21 +88,27 @@ export default function Navbar() {
 
   // Cerrar menú móvil al cambiar de ruta
   useEffect(() => {
-    setIsMobileMenuOpen(false)
-  }, [pathname])
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false)
+    }
+  }, [pathname, isMobileMenuOpen])
 
   const isActive = (path: string) => pathname === path
 
-  const handleLogout = () => {
-    localStorage.removeItem('userSession')
-    setUser(null)
-    
-    toast.info('You have been logged out successfully', {
-      position: 'top-right',
-      autoClose: 2000,
-    })
-    
-    router.push('/login')
+  const handleLogout = async () => {
+    if (session) {
+      await signOut({ callbackUrl: '/login' })
+    } else {
+      localStorage.removeItem('userSession')
+      setLocalUser(null)
+
+      toast.info('You have been logged out successfully', {
+        position: 'top-right',
+        autoClose: 2000,
+      })
+
+      router.push('/login')
+    }
   }
 
   // Navigation items para Admins
@@ -104,8 +125,8 @@ export default function Navbar() {
   ]
 
   // Determinar qué items mostrar según el rol del usuario
-  const visibleNavItems = user?.role === 'Admin' 
-    ? adminNavItems 
+  const visibleNavItems = user?.role === 'Admin'
+    ? adminNavItems
     : customerNavItems.filter(item => !item.requireAuth || user)
 
   return (
@@ -124,9 +145,8 @@ export default function Navbar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`${styles.navLink} ${
-                    isActive(item.href) ? styles.active : ''
-                  }`}
+                  className={`${styles.navLink} ${isActive(item.href) ? styles.active : ''
+                    }`}
                 >
                   <Icon className={styles.navIcon} />
                   <span>{item.label}</span>
@@ -196,9 +216,8 @@ export default function Navbar() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className={`${styles.mobileNavLink} ${
-                        isActive(item.href) ? styles.active : ''
-                      }`}
+                      className={`${styles.mobileNavLink} ${isActive(item.href) ? styles.active : ''
+                        }`}
                     >
                       <Icon className={styles.navIcon} />
                       <span>{item.label}</span>

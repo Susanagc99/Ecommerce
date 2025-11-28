@@ -46,9 +46,7 @@
 .title {
   font-size: 2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary);
   background-clip: text;
   margin-bottom: 0.5rem;
 }
@@ -109,8 +107,8 @@
 
 /* Product Image */
 .productImage {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   object-fit: cover;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
@@ -143,7 +141,6 @@
 /* Price */
 .price {
   font-weight: 700;
-  color: var(--primary);
   font-size: 1rem;
 }
 
@@ -182,8 +179,7 @@
 }
 
 .featured {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: white;
+  background: #d1fae5;
 }
 
 .notFeatured {
@@ -211,8 +207,8 @@
 }
 
 .editBtn {
-  background: var(--background-soft);
-  color: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
 }
 
 .editBtn:hover {
@@ -222,8 +218,8 @@
 }
 
 .deleteBtn {
-  background: var(--background-soft);
-  color: var(--secondary);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
 }
 
 .deleteBtn:hover {
