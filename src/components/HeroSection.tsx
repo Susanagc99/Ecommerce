@@ -1,9 +1,13 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import Button from './Button'
+import { useLanguage } from '@/context/LanguageContext'
 import styles from '@/styles/HeroSection.module.css'
 
 export default function HeroSection() {
+  const { t } = useLanguage()
   return (
     <section className={styles.hero}>
       {/* Background Image */}
@@ -31,25 +35,24 @@ export default function HeroSection() {
         <div className={styles.container}>
           <div className={styles.textContent}>
               <h1 className={styles.title}>
-              Find your perfect
+              {t('hero.title')}
               <br />
-              <span className={styles.titleGradient}>Gadgets</span>
+              <span className={styles.titleGradient}>{t('hero.titleHighlight')}</span>
             </h1>
             
             <p className={styles.description}>
-              Discover the latest tech gadgets and accessories. From gaming gear
-              to smart devices, we have everything to elevate your tech experience.
+              {t('hero.description')}
             </p>
             
             <div className={styles.ctas}>
               <Link href="/shop">
                 <Button size="md" variant="primary">
-                  Shop now
+                  {t('hero.shopNow')}
                 </Button>
               </Link>
               <Link href="/about">
                 <Button size="md" variant="outline">
-                  Learn more
+                  {t('hero.learnMore')}
                 </Button>
               </Link>
             </div>
@@ -58,17 +61,17 @@ export default function HeroSection() {
             <div className={styles.stats}>
               <div className={styles.stat}>
                 <div className={styles.statNumber}>500+</div>
-                <div className={styles.statLabel}>Products</div>
+                <div className={styles.statLabel}>{t('hero.stats.products')}</div>
               </div>
               <div className={styles.statDivider} />
               <div className={styles.stat}>
                 <div className={styles.statNumber}>10K+</div>
-                <div className={styles.statLabel}>Happy Customers</div>
+                <div className={styles.statLabel}>{t('hero.stats.customers')}</div>
               </div>
               <div className={styles.statDivider} />
               <div className={styles.stat}>
                 <div className={styles.statNumber}>24/7</div>
-                <div className={styles.statLabel}>Support</div>
+                <div className={styles.statLabel}>{t('hero.stats.support')}</div>
               </div>
             </div>
           </div>

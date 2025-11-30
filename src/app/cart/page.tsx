@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
+import { useLanguage } from '@/context/LanguageContext'
 import { formatPrice } from '@/lib/utils'
 import { showToast } from '@/lib/toast'
 import Button from '@/components/Button'
@@ -19,6 +20,7 @@ import {
 
 export default function CartPage() {
   const router = useRouter()
+  const { t } = useLanguage()
   const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart()
   const [itemCount, setItemCount] = useState(0)
   const [total, setTotal] = useState(0)
@@ -32,7 +34,7 @@ export default function CartPage() {
   const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity < 1) {
       removeFromCart(id)
-      showToast.info('Item removed from cart', { autoClose: 2000 })
+      showToast.info(t('cart.messages.itemRemoved'), { autoClose: 2000 })
     } else {
       updateQuantity(id, newQuantity)
     }
@@ -40,24 +42,24 @@ export default function CartPage() {
 
   const handleRemove = (id: string, name: string) => {
     removeFromCart(id)
-    showToast.success(`${name} removed from cart`, { autoClose: 2000 })
+    showToast.success(`${name} ${t('cart.messages.removed')}`, { autoClose: 2000 })
   }
 
   const handleClearCart = () => {
     if (items.length === 0) return
 
     clearCart()
-    showToast.info('Cart cleared', { autoClose: 2000 })
+    showToast.info(t('cart.messages.cartCleared'), { autoClose: 2000 })
   }
 
   const handleCheckout = () => {
     if (items.length === 0) {
-      showToast.error('Your cart is empty', { autoClose: 2000 })
+      showToast.error(t('cart.messages.cartEmpty'), { autoClose: 2000 })
       return
     }
 
     // Possible feature
-    showToast.info('Checkout feature coming soon...', { autoClose: 2000 })
+    showToast.info(t('cart.messages.checkoutSoon'), { autoClose: 2000 })
   }
 
   if (items.length === 0) {
@@ -66,14 +68,14 @@ export default function CartPage() {
         <div className={styles.container}>
           <div className={styles.empty}>
             <ShoppingBagIcon className={styles.emptyIcon} />
-            <h2 className={styles.emptyTitle}>Your cart is empty</h2>
+            <h2 className={styles.emptyTitle}>{t('cart.empty')}</h2>
             <p className={styles.emptyDescription}>
-              Add some products to start shopping
+              {t('cart.emptyDescription')}
             </p>
             <Link href="/shop">
               <Button variant="primary" size="lg">
                 <ArrowLeftIcon className={styles.backIcon} />
-                Go to Shop
+                {t('cart.goToShop')}
               </Button>
             </Link>
           </div>
@@ -89,7 +91,7 @@ export default function CartPage() {
         <div className={styles.header}>
           <div>
             <p className={styles.subtitle}>
-              {itemCount} {itemCount === 1 ? 'item' : 'items'} in your cart
+              {itemCount} {itemCount === 1 ? t('cart.item') : t('cart.items')} {t('cart.itemsInCart')}
             </p>
           </div>
           {items.length > 0 && (
@@ -99,7 +101,7 @@ export default function CartPage() {
               className={styles.clearButton}
             >
               <TrashIcon className={styles.trashIcon} />
-              Clear Cart
+              {t('cart.clearCart')}
             </Button>
           )}
         </div>
@@ -150,7 +152,7 @@ export default function CartPage() {
 
                   {/* Subtotal */}
                   <div className={styles.subtotal}>
-                    <p className={styles.subtotalLabel}>Subtotal</p>
+                    <p className={styles.subtotalLabel}>{t('cart.subtotal')}</p>
                     <p className={styles.subtotalValue}>
                       {formatPrice(item.price * item.quantity)}
                     </p>
@@ -172,22 +174,22 @@ export default function CartPage() {
           {/* Order Summary */}
           <div className={styles.summarySection}>
             <div className={styles.summaryCard}>
-              <h2 className={styles.summaryTitle}>Order Summary</h2>
+              <h2 className={styles.summaryTitle}>{t('cart.orderSummary')}</h2>
 
               <div className={styles.summaryRow}>
-                <span className={styles.summaryLabel}>Subtotal</span>
+                <span className={styles.summaryLabel}>{t('cart.subtotal')}</span>
                 <span className={styles.summaryValue}>{formatPrice(total)}</span>
               </div>
 
               <div className={styles.summaryRow}>
-                <span className={styles.summaryLabel}>Shipping</span>
-                <span className={styles.summaryValue}>Calculated at checkout</span>
+                <span className={styles.summaryLabel}>{t('cart.shipping')}</span>
+                <span className={styles.summaryValue}>{t('cart.shippingCalculated')}</span>
               </div>
 
               <div className={styles.summaryDivider} />
 
               <div className={styles.summaryRow}>
-                <span className={styles.summaryTotalLabel}>Total</span>
+                <span className={styles.summaryTotalLabel}>{t('cart.total')}</span>
                 <span className={styles.summaryTotalValue}>{formatPrice(total)}</span>
               </div>
 
@@ -198,13 +200,13 @@ export default function CartPage() {
                 onClick={handleCheckout}
                 className={styles.checkoutButton}
               >
-                Proceed to Checkout
+                {t('cart.checkout')}
               </Button>
 
               <Link href="/shop">
                 <Button variant="outline" size="md" fullWidth className={styles.continueButton}>
                   <ArrowLeftIcon className={styles.backIcon} />
-                  Continue Shopping
+                  {t('cart.continueShopping')}
                 </Button>
               </Link>
             </div>

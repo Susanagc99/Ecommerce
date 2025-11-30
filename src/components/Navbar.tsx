@@ -20,6 +20,8 @@ import {
 import { showToast } from '@/lib/toast'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
+import { useLanguage } from '@/context/LanguageContext'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 interface NavItem {
   href: string
@@ -32,6 +34,7 @@ interface NavItem {
 export default function Navbar() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const { t } = useLanguage()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const { getItemCount } = useCart()
@@ -68,20 +71,20 @@ export default function Navbar() {
   }
 
   const handleComingSoon = (label: string) => {
-    showToast.info(`${label} coming soon...`, { autoClose: 2000 })
+    showToast.info(`${label} ${t('common.comingSoon')}`, { autoClose: 2000 })
   }
 
   // Navigation items for Admins
   const adminNavItems: NavItem[] = [
-    { href: '/dashboard', label: 'Dashboard', icon: ChartBarIcon },
+    { href: '/dashboard', label: t('navbar.dashboard'), icon: ChartBarIcon },
   ]
 
   // Navigation items for Customers and unauthenticated users
   const customerNavItems: NavItem[] = [
-    { href: '/shop', label: 'Shop', icon: ShoppingBagIcon, requireAuth: false },
-    { href: '/favorites', label: 'Favorites', icon: HeartIcon, requireAuth: true, comingSoon: true },
-    { href: '/purchases', label: 'My Purchases', icon: TruckIcon, requireAuth: true, comingSoon: true },
-    { href: '/about', label: 'About Us', icon: InformationCircleIcon, requireAuth: false },
+    { href: '/shop', label: t('navbar.shop'), icon: ShoppingBagIcon, requireAuth: false },
+    { href: '/favorites', label: t('navbar.favorites'), icon: HeartIcon, requireAuth: true, comingSoon: true },
+    { href: '/purchases', label: t('navbar.myPurchases'), icon: TruckIcon, requireAuth: true, comingSoon: true },
+    { href: '/about', label: t('navbar.about'), icon: InformationCircleIcon, requireAuth: false },
   ]
 
   // Determine which items to show based on user role
@@ -128,6 +131,9 @@ export default function Navbar() {
 
         {/* Right Section - Cart, User, Login */}
         <div className={styles.rightSection}>
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+
           {/* Cart - Only visible for Customers and unauthenticated users */}
           {user?.role !== 'Admin' && (
             <Link href="/cart" className={styles.cartButton}>
@@ -152,13 +158,13 @@ export default function Navbar() {
               </div>
               <button onClick={handleLogout} className={styles.logoutButton}>
                 <ArrowRightEndOnRectangleIcon className={styles.icon} />
-                <span>Logout</span>
+                <span>{t('navbar.logout')}</span>
               </button>
             </div>
           ) : (
             <Link href="/login" className={styles.loginButton}>
               <ArrowRightStartOnRectangleIcon className={styles.icon} />
-              <span>Login</span>
+              <span>{t('navbar.login')}</span>
             </Link>
           )}
 
@@ -220,13 +226,13 @@ export default function Navbar() {
                   </div>
                   <button onClick={handleLogout} className={styles.mobileLogoutButton}>
                     <ArrowRightEndOnRectangleIcon className={styles.icon} />
-                    <span>Logout</span>
+                    <span>{t('navbar.logout')}</span>
                   </button>
                 </>
               ) : (
                 <Link href="/login" className={styles.mobileLoginButton}>
                   <ArrowRightStartOnRectangleIcon className={styles.icon} />
-                  <span>Login</span>
+                  <span>{t('navbar.login')}</span>
                 </Link>
               )}
             </div>

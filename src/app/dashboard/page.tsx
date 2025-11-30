@@ -6,6 +6,7 @@ import Button from '@/components/Button'
 import { formatPrice, confirmDelete } from '@/lib/utils'
 import { showToast } from '@/lib/toast'
 import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/context/LanguageContext'
 import { createProduct } from '@/services/products'
 import { CATEGORIES, type CategoryType } from '@/constants/categories'
 import styles from './dashboard.module.css'
@@ -42,6 +43,7 @@ interface FormErrors {
 export default function DashboardPage() {
   const router = useRouter()
   const { user, isAdmin, isLoading } = useAuth()
+  const { t } = useLanguage()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -70,7 +72,7 @@ export default function DashboardPage() {
 
     // Verify user is Admin
     if (!isAdmin) {
-      showToast.error('Access denied. Admin only.')
+      showToast.error(t('messages.accessDenied'))
       router.push('/')
       return
     }
@@ -86,11 +88,11 @@ export default function DashboardPage() {
         const result = await response.json()
         setProducts(result.data || [])
       } else {
-        showToast.error('Failed to fetch products')
+        showToast.error(t('messages.failedToFetch'))
       }
     } catch (error) {
       console.error('Error fetching products:', error)
-      showToast.error('Error loading products')
+      showToast.error(t('messages.errorLoadingProducts'))
     } finally {
       setLoading(false)
     }
@@ -151,40 +153,40 @@ export default function DashboardPage() {
     const newErrors: FormErrors = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Product name is required'
+      newErrors.name = t('dashboard.validation.nameRequired')
     } else if (formData.name.trim().length < 3) {
-      newErrors.name = 'Name must be at least 3 characters'
+      newErrors.name = t('dashboard.validation.nameMinLength')
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Description is required'
+      newErrors.description = t('dashboard.validation.descriptionRequired')
     }
 
     if (!formData.price) {
-      newErrors.price = 'Price is required'
+      newErrors.price = t('dashboard.validation.priceRequired')
     } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
-      newErrors.price = 'Price must be a valid number greater than or equal to 0'
+      newErrors.price = t('dashboard.validation.priceInvalid')
     }
 
     if (!formData.category) {
-      newErrors.category = 'Category is required'
+      newErrors.category = t('dashboard.validation.categoryRequired')
     }
 
     if (!formData.subcategory) {
-      newErrors.subcategory = 'Subcategory is required'
+      newErrors.subcategory = t('dashboard.validation.subcategoryRequired')
     }
 
     // Validate file only if creating a new product
     if (!editingProduct && !file) {
-      newErrors.file = 'You must select an image'
+      newErrors.file = t('dashboard.validation.imageRequired')
     } else if (file && !isValidFileType(file)) {
-      newErrors.file = 'Only images are allowed (JPEG, JPG, PNG, WEBP)'
+      newErrors.file = t('dashboard.validation.imageTypeInvalid')
     } else if (file && file.size > 5 * 1024 * 1024) {
-      newErrors.file = 'Image must not exceed 5MB'
+      newErrors.file = t('dashboard.validation.imageSizeInvalid')
     }
 
     if (formData.stock && (isNaN(parseInt(formData.stock)) || parseInt(formData.stock) < 0)) {
-      newErrors.stock = 'Stock must be a valid number greater than or equal to 0'
+      newErrors.stock = t('dashboard.validation.stockInvalid')
     }
 
     setErrors(newErrors)
@@ -248,11 +250,11 @@ export default function DashboardPage() {
     try {
       if (editingProduct) {
         // TODO: Implement product update
-        showToast.info('Product update coming soon')
+        showToast.info(t('messages.updateComingSoon'))
       } else {
         // Create new product
         if (!file) {
-          throw new Error('File not available')
+          throw new Error(t('dashboard.validation.fileNotAvailable'))
         }
 
         const response = await createProduct({
@@ -267,7 +269,7 @@ export default function DashboardPage() {
         })
 
         if (response.success) {
-          showToast.success('Product created successfully!')
+          showToast.success(t('messages.productCreated'))
           handleCloseModal()
           fetchProducts()
         }
@@ -277,14 +279,14 @@ export default function DashboardPage() {
       if (error instanceof Error && 'response' in error) {
         const axiosError = error as { response?: { data?: { message?: string } } }
         setErrors({
-          submit: axiosError.response?.data?.message || 'Error saving product'
+          submit: axiosError.response?.data?.message || t('dashboard.validation.errorSaving')
         })
       } else {
         setErrors({
-          submit: 'Error saving product'
+          submit: t('dashboard.validation.errorSaving')
         })
       }
-      showToast.error('Error saving product')
+      showToast.error(t('messages.errorSavingProduct'))
     } finally {
       setIsSubmitting(false)
     }
@@ -293,13 +295,13 @@ export default function DashboardPage() {
   const handleDelete = async (id: string) => {
     // Find product to get its name for the alert
     const product = products.find((p) => p._id === id)
-    const productName = product?.name || 'this product'
+    const productName = product?.name || t('dashboard.delete.thisProduct')
 
     // Show confirmation dialog with SweetAlert2
     const confirmed = await confirmDelete(
-      'Are you sure?',
-      `You are about to delete "${productName}". This action cannot be undone!`,
-      'Yes, delete it!'
+      t('dashboard.delete.confirmTitle'),
+      `${t('dashboard.delete.confirmMessage')} "${productName}". ${t('dashboard.delete.confirmMessageEnd')}`,
+      t('dashboard.delete.confirmButton')
     )
 
     if (!confirmed) return
@@ -313,8 +315,8 @@ export default function DashboardPage() {
         // Show success alert with SweetAlert2
         const { default: Swal } = await import('sweetalert2')
         await Swal.fire({
-          title: 'Deleted!',
-          text: `"${productName}" has been deleted successfully.`,
+          title: t('dashboard.delete.successTitle'),
+          text: `"${productName}" ${t('dashboard.delete.successMessage')}`,
           icon: 'success',
           confirmButtonColor: '#06B6D4',
           background: '#FFFFFF',
@@ -323,11 +325,11 @@ export default function DashboardPage() {
         
         fetchProducts()
       } else {
-        showToast.error('Error deleting product')
+        showToast.error(t('messages.errorDeletingProduct'))
       }
     } catch (error) {
       console.error('Error deleting product:', error)
-      showToast.error('Error deleting product')
+      showToast.error(t('messages.errorDeletingProduct'))
     }
   }
 
@@ -350,12 +352,12 @@ export default function DashboardPage() {
         {/* Header */}
         <div className={styles.header}>
           <div>
-            <h1 className={styles.title}>Product Management</h1>
-            <p className={styles.subtitle}>Manage your product inventory</p>
+            <h1 className={styles.title}>{t('dashboard.title')}</h1>
+            <p className={styles.subtitle}>{t('dashboard.subtitle')}</p>
           </div>
           <Button onClick={() => handleOpenModal()} variant="primary" size="md">
             <PlusIcon className={styles.btnIcon} />
-            Add Product
+            {t('dashboard.addProduct')}
           </Button>
         </div>
 
@@ -364,14 +366,14 @@ export default function DashboardPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Featured</th>
-                <th>Actions</th>
+                <th>{t('dashboard.table.id')}</th>
+                <th>{t('dashboard.table.image')}</th>
+                <th>{t('dashboard.table.name')}</th>
+                <th>{t('dashboard.table.category')}</th>
+                <th>{t('dashboard.table.price')}</th>
+                <th>{t('dashboard.table.stock')}</th>
+                <th>{t('dashboard.table.featured')}</th>
+                <th>{t('dashboard.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -412,7 +414,7 @@ export default function DashboardPage() {
                         product.featured ? styles.featured : styles.notFeatured
                       }`}
                     >
-                      {product.featured ? 'Yes' : 'No'}
+                      {product.featured ? t('dashboard.table.yes') : t('dashboard.table.no')}
                     </span>
                   </td>
                   <td>
@@ -420,14 +422,14 @@ export default function DashboardPage() {
                       <button
                         onClick={() => handleOpenModal(product)}
                         className={styles.editBtn}
-                        title="Edit"
+                        title={t('dashboard.table.edit')}
                       >
                         <PencilIcon className={styles.actionIcon} />
                       </button>
                       <button
                         onClick={() => handleDelete(product._id)}
                         className={styles.deleteBtn}
-                        title="Delete"
+                        title={t('dashboard.table.delete')}
                       >
                         <TrashIcon className={styles.actionIcon} />
                       </button>
@@ -444,7 +446,7 @@ export default function DashboardPage() {
           <div className={styles.modalOverlay} onClick={handleCloseModal}>
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
               <div className={styles.modalHeader}>
-                <h2>{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
+                <h2>{editingProduct ? t('dashboard.form.editProduct') : t('dashboard.form.addNewProduct')}</h2>
                 <button onClick={handleCloseModal} className={styles.closeBtn}>
                   <XMarkIcon className={styles.closeIcon} />
                 </button>
@@ -454,14 +456,14 @@ export default function DashboardPage() {
                 <div className={styles.formGrid}>
                   {/* Product Name */}
                   <div className={styles.formGroup}>
-                    <label htmlFor="name">Product Name *</label>
+                    <label htmlFor="name">{t('dashboard.form.productNameLabel')}</label>
                     <input
                       id="name"
                       name="name"
                       type="text"
                       value={formData.name}
                       onChange={handleInputChange}
-                      placeholder="E.g: PlayStation 5 Console"
+                      placeholder={t('dashboard.form.productNamePlaceholder')}
                       disabled={isSubmitting}
                     />
                     {errors.name && (
@@ -471,14 +473,14 @@ export default function DashboardPage() {
 
                   {/* Price */}
                   <div className={styles.formGroup}>
-                    <label htmlFor="price">Price (COP) *</label>
+                    <label htmlFor="price">{t('dashboard.form.priceLabel')}</label>
                     <input
                       id="price"
                       name="price"
                       type="number"
                       value={formData.price}
                       onChange={handleInputChange}
-                      placeholder="2999000"
+                      placeholder={t('dashboard.form.pricePlaceholder')}
                       min="0"
                       step="1"
                       disabled={isSubmitting}
@@ -490,7 +492,7 @@ export default function DashboardPage() {
 
                   {/* Category */}
                   <div className={styles.formGroup}>
-                    <label htmlFor="category">Category *</label>
+                    <label htmlFor="category">{t('dashboard.form.categoryLabel')}</label>
                     <select
                       id="category"
                       name="category"
@@ -498,7 +500,7 @@ export default function DashboardPage() {
                       onChange={handleInputChange}
                       disabled={isSubmitting}
                     >
-                      <option value="">Select a category</option>
+                      <option value="">{t('dashboard.form.selectCategory')}</option>
                       {Object.keys(CATEGORIES).map((cat) => (
                         <option key={cat} value={cat}>
                           {cat}
@@ -512,7 +514,7 @@ export default function DashboardPage() {
 
                   {/* Subcategory */}
                   <div className={styles.formGroup}>
-                    <label htmlFor="subcategory">Subcategory *</label>
+                    <label htmlFor="subcategory">{t('dashboard.form.subcategoryLabel')}</label>
                     <select
                       id="subcategory"
                       name="subcategory"
@@ -522,8 +524,8 @@ export default function DashboardPage() {
                     >
                       <option value="">
                         {formData.category
-                          ? 'Select a subcategory'
-                          : 'First select a category'}
+                          ? t('dashboard.form.selectSubcategory')
+                          : t('dashboard.form.firstSelectCategory')}
                       </option>
                       {formData.category &&
                         getSubcategories(formData.category).map((subcat) => (
@@ -539,14 +541,14 @@ export default function DashboardPage() {
 
                   {/* Stock */}
                   <div className={styles.formGroup}>
-                    <label htmlFor="stock">Stock</label>
+                    <label htmlFor="stock">{t('dashboard.form.stockLabel')}</label>
                     <input
                       id="stock"
                       name="stock"
                       type="number"
                       value={formData.stock}
                       onChange={handleInputChange}
-                      placeholder="15"
+                      placeholder={t('dashboard.form.stockPlaceholder')}
                       min="0"
                       disabled={isSubmitting}
                     />
@@ -558,7 +560,7 @@ export default function DashboardPage() {
                   {/* Image */}
                   <div className={styles.formGroup}>
                     <label htmlFor="file">
-                      Product Image {!editingProduct && '*'}
+                      {t('dashboard.form.imageLabel')} {!editingProduct && '*'}
                     </label>
                     <input
                       id="file"
@@ -569,7 +571,7 @@ export default function DashboardPage() {
                       disabled={isSubmitting}
                     />
                     <p className={styles.helpText}>
-                      Formats: JPG, PNG, WEBP (max 5MB)
+                      {t('dashboard.form.imageFormats')}
                     </p>
                     {file && (
                       <div className={styles.fileInfo}>
@@ -577,7 +579,7 @@ export default function DashboardPage() {
                           {file.name}
                         </p>
                         <p className={styles.fileSize}>
-                          Size: {(file.size / 1024 / 1024).toFixed(2)}MB
+                          {t('dashboard.form.size')} {(file.size / 1024 / 1024).toFixed(2)}MB
                         </p>
                       </div>
                     )}
@@ -588,13 +590,13 @@ export default function DashboardPage() {
 
                   {/* Description - Full width */}
                   <div className={styles.formGroupFull}>
-                    <label htmlFor="description">Description *</label>
+                    <label htmlFor="description">{t('dashboard.form.descriptionLabel')}</label>
                     <textarea
                       id="description"
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
-                      placeholder="Describe the product features..."
+                      placeholder={t('dashboard.form.descriptionPlaceholder')}
                       rows={3}
                       disabled={isSubmitting}
                     />
@@ -606,9 +608,9 @@ export default function DashboardPage() {
                   {/* Image Preview */}
                   {imagePreview && (
                     <div className={styles.formGroupFull}>
-                      <label>Preview</label>
+                      <label>{t('dashboard.form.preview')}</label>
                       <div className={styles.imagePreview}>
-                        <img src={imagePreview} alt="Preview" />
+                        <img src={imagePreview} alt={t('dashboard.form.preview')} />
                       </div>
                     </div>
                   )}
@@ -625,7 +627,7 @@ export default function DashboardPage() {
                         }
                         disabled={isSubmitting}
                       />
-                      <span>Featured Product</span>
+                      <span>{t('dashboard.form.featuredLabel')}</span>
                     </label>
                   </div>
                 </div>
@@ -645,14 +647,14 @@ export default function DashboardPage() {
                     variant="outline"
                     disabled={isSubmitting}
                   >
-                    Cancel
+                    {t('dashboard.form.cancel')}
                   </Button>
                   <Button type="submit" variant="primary" disabled={isSubmitting}>
                     {isSubmitting
-                      ? 'Saving...'
+                      ? t('dashboard.form.saving')
                       : editingProduct
-                      ? 'Update Product'
-                      : 'Create Product'}
+                      ? t('dashboard.form.updateProduct')
+                      : t('dashboard.form.createProduct')}
                   </Button>
                 </div>
               </form>

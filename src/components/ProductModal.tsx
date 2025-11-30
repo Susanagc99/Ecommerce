@@ -6,6 +6,7 @@ import Button from './Button'
 import { formatPrice } from '@/lib/utils'
 import { showToast } from '@/lib/toast'
 import { useCart } from '@/context/CartContext'
+import { useLanguage } from '@/context/LanguageContext'
 import styles from '@/styles/ProductModal.module.css'
 import { XMarkIcon, ShoppingCartIcon, HeartIcon } from '@heroicons/react/24/outline'
 
@@ -27,6 +28,12 @@ interface ProductModalProps {
 
 export default function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
   const { addToCart } = useCart()
+  const { t } = useLanguage()
+
+  // Función helper para traducir categoría
+  const getTranslatedCategory = (cat: string) => {
+    return t(`categories.${cat}`) || cat
+  }
 
   // Close modal on ESC key
   useEffect(() => {
@@ -52,11 +59,11 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
       price: product.price,
       image: product.image,
     })
-    showToast.success(`${product.name} added to cart!`, { autoClose: 2000 })
+    showToast.success(`${product.name} ${t('messages.addedToCart')}`, { autoClose: 2000 })
   }
 
   const handleAddToFavorites = () => {
-    showToast.success(`${product.name} added to favorites!`, { autoClose: 2000 })
+    showToast.success(`${product.name} ${t('messages.addedToFavorites')}`, { autoClose: 2000 })
   }
 
   return (
@@ -77,7 +84,7 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
             
             {product.category && (
               <div className={styles.categoryBadge}>
-                {product.category}
+                {getTranslatedCategory(product.category)}
               </div>
             )}
           </div>
@@ -91,17 +98,19 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
               {product.stock !== undefined && (
                 <span className={styles.stock}>
                   {product.stock > 0 ? (
-                    <span className={styles.inStock}>In Stock ({product.stock})</span>
+                    <span className={styles.inStock}>{t('product.inStock')} ({product.stock})</span>
                   ) : (
-                    <span className={styles.outOfStock}>Out of Stock</span>
+                    <span className={styles.outOfStock}>{t('product.outOfStock')}</span>
                   )}
                 </span>
               )}
             </div>
 
             <div className={styles.description}>
-              <h3 className={styles.descriptionTitle}>Description</h3>
-              <p className={styles.descriptionText}>{product.description}</p>
+              <h3 className={styles.descriptionTitle}>{t('product.description')}</h3>
+              <p className={styles.descriptionText}>
+                {product.description}
+              </p>
             </div>
 
             {/* Actions */}
@@ -115,13 +124,13 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
                 className={styles.addToCartButton}
               >
                 <ShoppingCartIcon className={styles.actionIcon} />
-                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                {product.stock === 0 ? t('product.outOfStock') : t('shop.addToCart')}
               </Button>
               
               <button
                 onClick={handleAddToFavorites}
                 className={styles.favoriteButton}
-                aria-label="Add to favorites"
+                aria-label={t('product.addToFavorites')}
               >
                 <HeartIcon style={{ width: '24px', height: '24px' }} />
               </button>

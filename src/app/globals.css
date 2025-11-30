@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -27,8 +26,7 @@
   --border: #E5E7EB;
   --border-light: #F3F4F6;
   
-  /* Font */
-  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Font - Space Grotesk will be injected by Next.js font loader */
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -54,7 +52,7 @@ html {
 }
 
 body {
-  font-family: var(--font-inter);
+  font-family: var(--font-space-grotesk);
   background-color: var(--background);
   color: var(--text-primary);
   line-height: 1.6;

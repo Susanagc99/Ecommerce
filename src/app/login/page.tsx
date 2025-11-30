@@ -9,6 +9,7 @@ import Input from '@/components/Input'
 import Button from '@/components/Button'
 import { showToast } from '@/lib/toast'
 import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/context/LanguageContext'
 import styles from './login.module.css'
 import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
@@ -16,6 +17,7 @@ import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 export default function LoginPage() {
   const router = useRouter()
   const { user: currentUser, login } = useAuth()
+  const { t } = useLanguage()
   const [user, setUser] = useState('')
   const [pass, setPass] = useState('')
   const [error, setError] = useState('')
@@ -34,13 +36,13 @@ export default function LoginPage() {
     setLoading(true)
 
     if (!user.trim()) {
-      setError('Username is required')
+      setError(t('login.errors.emailRequired'))
       setLoading(false)
       return
     }
 
     if (!pass.trim()) {
-      setError('Password is required')
+      setError(t('login.errors.passwordRequired'))
       setLoading(false)
       return
     }
@@ -65,7 +67,7 @@ export default function LoginPage() {
         }
 
         login(sessionData)
-        showToast.success(`Welcome back, ${data.user.name}!`, { autoClose: 2000 })
+        showToast.success(`${t('messages.welcomeBack')}, ${data.user.name}!`, { autoClose: 2000 })
 
         setTimeout(() => {
           router.push('/')
@@ -76,12 +78,12 @@ export default function LoginPage() {
 
       // Manejar errores de axios
       if (axios.isAxiosError(error) && error.response) {
-        const errorMessage = error.response.data.error || 'Invalid username or password'
+        const errorMessage = error.response.data.error || t('login.errors.loginError')
         setError(errorMessage)
         showToast.error(errorMessage)
       } else {
-        setError('Connection error. Please try again.')
-        showToast.error('Connection error. Please try again.')
+        setError(t('login.errors.loginError'))
+        showToast.error(t('login.errors.loginError'))
       }
     }
 
@@ -94,34 +96,34 @@ export default function LoginPage() {
 
         {/* Title */}
         <div className={styles.header}>
-          <h1 className={styles.title}>Welcome Back</h1>
-          <p className={styles.subtitle}>Sign in to continue to Techland</p>
+          <h1 className={styles.title}>{t('login.title')}</h1>
+          <p className={styles.subtitle}>{t('login.subtitle')}</p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <Input
-            label="Username"
+            label={t('login.email')}
             type="text"
             value={user}
             onChange={(e) => {
               setUser(e.target.value)
               setError('')
             }}
-            error={error && !user.trim() ? 'Username is required' : ''}
+            error={error && !user.trim() ? t('login.errors.emailRequired') : ''}
             icon={<UserIcon />}
             required
           />
 
           <Input
-            label="Password"
+            label={t('login.password')}
             type="password"
             value={pass}
             onChange={(e) => {
               setPass(e.target.value)
               setError('')
             }}
-            error={error && !pass.trim() ? 'Password is required' : ''}
+            error={error && !pass.trim() ? t('login.errors.passwordRequired') : ''}
             icon={<LockClosedIcon />}
             required
           />
@@ -139,13 +141,13 @@ export default function LoginPage() {
             fullWidth
             disabled={loading}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? t('login.signingIn') : t('login.submitButton')}
           </Button>
         </form>
 
         {/* Register Link */}
         <div className={styles.divider}>
-          <span>OR</span>
+          <span>{t('login.or')}</span>
         </div>
 
         <Button
@@ -160,14 +162,14 @@ export default function LoginPage() {
             alt="Google"
             className={styles.googleIcon}
           />
-          Sign in with Google
+          {t('login.signInWithGoogle')}
         </Button>
 
         <div className={styles.footer}>
           <p className={styles.footerText}>
-            Don&apos;t have an account?{' '}
+            {t('login.registerLink').split('?')[0]}?{' '}
             <Link href="/register" className={styles.footerLink}>
-              Sign up
+              {t('login.registerLink').split('?')[1] || 'Sign up'}
             </Link>
           </p>
         </div>

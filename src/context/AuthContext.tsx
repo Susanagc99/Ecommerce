@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { showToast } from '@/lib/toast'
+import { useLanguage } from './LanguageContext'
 
 export interface UserSession {
   id: string
@@ -45,6 +46,7 @@ function normalizeGoogleUser(googleUser: any): UserSession {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: googleSession, status } = useSession()
+  const { t } = useLanguage()
   const [dbUser, setDbUser] = useState<UserSession | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
@@ -119,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setDbUser(sessionData)
     } catch (error) {
       console.error('Error saving user session:', error)
-      showToast.error('Error saving session')
+      showToast.error(t('messages.errorSavingSession'))
     }
   }
 
@@ -135,12 +137,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Database session - clear localStorage
         localStorage.removeItem(STORAGE_KEY)
         setDbUser(null)
-        showToast.info('You have been logged out successfully', { autoClose: 2000 })
+        showToast.info(t('messages.loggedOutSuccess'), { autoClose: 2000 })
         router.push('/login')
       }
     } catch (error) {
       console.error('Error during logout:', error)
-      showToast.error('Error logging out')
+      showToast.error(t('messages.errorLoggingOut'))
     }
   }
 

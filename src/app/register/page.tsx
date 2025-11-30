@@ -8,12 +8,14 @@ import Input from '@/components/Input'
 import Button from '@/components/Button'
 import { showToast } from '@/lib/toast'
 import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/context/LanguageContext'
 import styles from '../login/login.module.css'
 import { UserIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
 export default function RegisterPage() {
   const router = useRouter()
   const { login } = useAuth()
+  const { t } = useLanguage()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -36,29 +38,29 @@ export default function RegisterPage() {
     const newErrors: Record<string, string> = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t('register.errors.nameRequired')
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required'
+      newErrors.email = t('register.errors.emailRequired')
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid'
+      newErrors.email = t('register.errors.emailInvalid')
     }
 
     if (!formData.username.trim()) {
-      newErrors.username = 'Username is required'
+      newErrors.username = t('register.errors.usernameRequired')
     } else if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters'
+      newErrors.username = t('register.errors.usernameShort')
     }
 
     if (!formData.password.trim()) {
-      newErrors.password = 'Password is required'
+      newErrors.password = t('register.errors.passwordRequired')
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
+      newErrors.password = t('register.errors.passwordShort')
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
+      newErrors.confirmPassword = t('register.errors.passwordMismatch')
     }
 
     setErrors(newErrors)
@@ -69,7 +71,7 @@ export default function RegisterPage() {
     e.preventDefault()
 
     if (!validateForm()) {
-      showToast.error('Please fix the errors in the form')
+      showToast.error(t('register.messages.fixErrors'))
       return
     }
 
@@ -86,7 +88,7 @@ export default function RegisterPage() {
 
       if (data.success) {
         // Registration successful
-        showToast.success('Account created successfully!', { autoClose: 2000 })
+        showToast.success(t('register.messages.success'), { autoClose: 2000 })
 
         // Auto-login after registration using AuthContext
         const sessionData = {
@@ -110,7 +112,7 @@ export default function RegisterPage() {
       
       // Manejar errores de axios
       if (axios.isAxiosError(error) && error.response) {
-        const errorMessage = error.response.data.error || 'Registration failed. Please try again.'
+        const errorMessage = error.response.data.error || t('register.messages.failed')
         showToast.error(errorMessage)
 
         // Establecer errores específicos si los hay
@@ -120,7 +122,7 @@ export default function RegisterPage() {
           setErrors({ ...errors, email: errorMessage })
         }
       } else {
-        showToast.error('Connection error. Please try again.')
+        showToast.error(t('register.messages.connectionError'))
       }
     }
 
@@ -141,14 +143,14 @@ export default function RegisterPage() {
 
         {/* Title */}
         <div className={styles.header}>
-          <h1 className={styles.title}>Create account</h1>
-          <p className={styles.subtitle}>Join Techland today and start shopping</p>
+          <h1 className={styles.title}>{t('register.title')}</h1>
+          <p className={styles.subtitle}>{t('register.subtitle')}</p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <Input
-            label="Full Name"
+            label={t('register.fullName')}
             type="text"
             value={formData.name}
             onChange={handleChange('name')}
@@ -158,7 +160,7 @@ export default function RegisterPage() {
           />
 
           <Input
-            label="Email"
+            label={t('register.email')}
             type="email"
             value={formData.email}
             onChange={handleChange('email')}
@@ -168,29 +170,29 @@ export default function RegisterPage() {
           />
 
           <Input
-            label="Username"
+            label={t('register.username')}
             type="text"
             value={formData.username}
             onChange={handleChange('username')}
             error={errors.username}
             icon={<UserIcon />}
-            helperText="At least 3 characters"
+            helperText={t('register.usernameHelper')}
             required
           />
 
           <Input
-            label="Password"
+            label={t('register.password')}
             type="password"
             value={formData.password}
             onChange={handleChange('password')}
             error={errors.password}
             icon={<LockClosedIcon />}
-            helperText="At least 6 characters"
+            helperText={t('register.passwordHelper')}
             required
           />
 
           <Input
-            label="Confirm Password"
+            label={t('register.confirmPassword')}
             type="password"
             value={formData.confirmPassword}
             onChange={handleChange('confirmPassword')}
@@ -206,16 +208,16 @@ export default function RegisterPage() {
             fullWidth
             disabled={loading}
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? t('register.creating') : t('register.submitButton')}
           </Button>
         </form>
 
         {/* Login Link */}
         <div className={styles.footer}>
           <p className={styles.footerText}>
-            Already have an account?{' '}
+            {t('register.loginLink')}{' '}
             <Link href="/login" className={styles.footerLink}>
-              Sign in
+              {t('register.signIn')}
             </Link>
           </p>
         </div>

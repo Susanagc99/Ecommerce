@@ -1,6 +1,7 @@
 'use client'
 
 import ProductCard from './ProductCard'
+import { useLanguage } from '@/context/LanguageContext'
 import styles from '@/styles/ProductGrid.module.css'
 
 export interface Product {
@@ -19,6 +20,8 @@ interface ProductGridProps {
 }
 
 export default function ProductGrid({ products, loading = false }: ProductGridProps) {
+  const { t } = useLanguage()
+  
   if (loading) {
     return (
       <div className={styles.grid}>
@@ -40,9 +43,9 @@ export default function ProductGrid({ products, loading = false }: ProductGridPr
     return (
       <div className={styles.empty}>
         <div className={styles.emptyIcon}>📦</div>
-        <h3 className={styles.emptyTitle}>No products found</h3>
+        <h3 className={styles.emptyTitle}>{t('shop.noProducts')}</h3>
         <p className={styles.emptyDescription}>
-          Try adjusting your filters or search terms
+          {t('shop.noProductsDescription')}
         </p>
       </div>
     )

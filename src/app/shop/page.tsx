@@ -7,6 +7,7 @@ import Pagination from '@/components/Pagination'
 import Input from '@/components/Input'
 import { getProducts } from '@/services/products'
 import { CATEGORIES } from '@/constants/categories'
+import { useLanguage } from '@/context/LanguageContext'
 import styles from './shop.module.css'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { showToast } from '@/lib/toast'
@@ -26,6 +27,7 @@ interface Product {
 }
 
 export default function ShopPage() {
+  const { t } = useLanguage()
   const searchParams = useSearchParams()
   const categoryFromUrl = searchParams.get('category') || ''
 
@@ -37,8 +39,8 @@ export default function ShopPage() {
 
   // Get unique categories from CATEGORIES constant
   const categories = useMemo(() => {
-    return ['All', ...Object.keys(CATEGORIES)]
-  }, [])
+    return [t('shop.all'), ...Object.keys(CATEGORIES)]
+  }, [t])
 
   // Fetch products from API
   useEffect(() => {
@@ -49,11 +51,11 @@ export default function ShopPage() {
         if (response.success) {
           setProducts(response.data)
         } else {
-          showToast.error('Error loading products')
+          showToast.error(t('messages.errorLoadingProducts'))
         }
       } catch (error) {
         console.error('Error fetching products:', error)
-        showToast.error('Error loading products')
+        showToast.error(t('messages.errorLoadingProducts'))
       } finally {
         setLoading(false)
       }
@@ -71,7 +73,7 @@ export default function ShopPage() {
 
       const matchesCategory =
         selectedCategory === '' ||
-        selectedCategory === 'All' ||
+        selectedCategory === t('shop.all') ||
         product.category === selectedCategory
 
       return matchesSearch && matchesCategory
@@ -98,7 +100,7 @@ export default function ShopPage() {
         <div className={styles.container}>
           <div className={styles.loading}>
             <div className={styles.spinner} />
-            <p>Loading products...</p>
+            <p>{t('shop.loading')}</p>
           </div>
         </div>
       </div>
@@ -110,9 +112,9 @@ export default function ShopPage() {
       <div className={styles.container}>
         {/* Header */}
         <div className={styles.header}>
-          <h1 className={styles.title}>Shop all products</h1>
+          <h1 className={styles.title}>{t('shop.title')}</h1>
           <p className={styles.subtitle}>
-            Discover the latest tech gadgets and accessories
+            {t('shop.subtitle')}
           </p>
         </div>
 
@@ -122,7 +124,7 @@ export default function ShopPage() {
           <div className={styles.searchWrapper}>
             <Input
               type="text"
-              placeholder="Search for accessories..."
+              placeholder={t('shop.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               icon={<MagnifyingGlassIcon />}
@@ -132,22 +134,30 @@ export default function ShopPage() {
 
           {/* Categories Filter */}
           <div className={styles.categoriesFilter}>
-            <label className={styles.filterLabel}>Filter by Category:</label>
+            <label className={styles.filterLabel}>{t('shop.filterByCategory')}</label>
             <div className={styles.categoriesList}>
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category === 'All' ? '' : category)}
-                  className={`${styles.categoryButton} ${
-                    (category === 'All' && selectedCategory === '') ||
-                    selectedCategory === category
-                      ? styles.active
-                      : ''
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+              {categories.map((category) => {
+                // Traducir el nombre de la categoría para mostrar, pero mantener el valor original para el filtro
+                const categoryKey = category === t('shop.all') ? 'all' : category
+                const categoryLabel = category === t('shop.all') 
+                  ? t('shop.all') 
+                  : t(`categories.${category}`) || category
+                
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category === t('shop.all') ? '' : category)}
+                    className={`${styles.categoryButton} ${
+                      (category === t('shop.all') && selectedCategory === '') ||
+                      selectedCategory === category
+                        ? styles.active
+                        : ''
+                    }`}
+                  >
+                    {categoryLabel}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -155,10 +165,10 @@ export default function ShopPage() {
         {/* Results Info */}
         <div className={styles.resultsInfo}>
           <p className={styles.resultsText}>
-            Showing <strong>{paginatedProducts.length}</strong> of{' '}
-            <strong>{filteredProducts.length}</strong> products
-            {selectedCategory && selectedCategory !== 'All' && (
-              <span className={styles.categoryBadge}> in {selectedCategory}</span>
+            {t('shop.showing')} <strong>{paginatedProducts.length}</strong> {t('shop.of')}{' '}
+            <strong>{filteredProducts.length}</strong> {t('shop.products')}
+            {selectedCategory && selectedCategory !== t('shop.all') && (
+              <span className={styles.categoryBadge}> {t('shop.in')} {t(`categories.${selectedCategory}`) || selectedCategory}</span>
             )}
           </p>
         </div>
@@ -166,7 +176,7 @@ export default function ShopPage() {
         {/* Products Grid */}
         {filteredProducts.length === 0 ? (
           <div className={styles.noProducts}>
-            <p>No products found.</p>
+            <p>{t('shop.noProducts')}</p>
           </div>
         ) : (
           <ProductGrid products={paginatedProducts} />

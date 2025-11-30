@@ -6,6 +6,8 @@ import Button from './Button'
 import ProductModal, { ProductDetail } from './ProductModal'
 import { formatPrice } from '@/lib/utils'
 import { showToast } from '@/lib/toast'
+import { useLanguage } from '@/context/LanguageContext'
+import { getProductDescription } from '@/i18n'
 import styles from '@/styles/ProductCard.module.css'
 import { HeartIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
@@ -23,23 +25,33 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ id, name, price, image, category, description, stock }: ProductCardProps) {
+  const { t, language } = useLanguage()
   const [isFavorite, setIsFavorite] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { addToCart } = useCart()
+
+  // Función helper para traducir categoría
+  const getTranslatedCategory = (cat?: string) => {
+    if (!cat) return t('product.uncategorized')
+    return t(`categories.${cat}`) || cat
+  }
+
+  // Obtener descripción traducida
+  const translatedDescription = getProductDescription(name, language) || description || t('product.noDescription')
 
   const productDetail: ProductDetail = {
     id,
     name,
     price,
     image,
-    category: category || 'Uncategorized',
-    description: description || 'No description available.',
+    category: category || t('product.uncategorized'),
+    description: translatedDescription,
     stock,
   }
 
   const handleAddToCart = () => {
     addToCart({ id, name, price, image })
-    showToast.success(`${name} added to cart!`, { autoClose: 2000 })
+    showToast.success(`${name} ${t('messages.addedToCart')}`, { autoClose: 2000 })
   }
 
   const toggleFavorite = (e: React.MouseEvent) => {
@@ -47,9 +59,9 @@ export default function ProductCard({ id, name, price, image, category, descript
     setIsFavorite(!isFavorite)
     
     if (!isFavorite) {
-      showToast.success(`${name} added to favorites!`, { autoClose: 2000 })
+      showToast.success(`${name} ${t('messages.addedToFavorites')}`, { autoClose: 2000 })
     } else {
-      showToast.info(`${name} removed from favorites`, { autoClose: 2000 })
+      showToast.info(`${name} ${t('messages.removedFromFavorites')}`, { autoClose: 2000 })
     }
   }
 
@@ -77,7 +89,7 @@ export default function ProductCard({ id, name, price, image, category, descript
               toggleFavorite(e)
             }}
             className={`${styles.favoriteButton} ${isFavorite ? styles.favoriteActive : ''}`}
-            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            aria-label={isFavorite ? t('product.removeFromFavorites') : t('product.addToFavorites')}
           >
             {isFavorite ? (
               <HeartIconSolid className={styles.heartIcon} />
@@ -89,7 +101,7 @@ export default function ProductCard({ id, name, price, image, category, descript
           {/* Category Badge */}
           {category && (
             <div className={styles.categoryBadge}>
-              {category}
+              {getTranslatedCategory(category)}
             </div>
           )}
         </div>
@@ -116,7 +128,7 @@ export default function ProductCard({ id, name, price, image, category, descript
             className={styles.addButton}
           >
             <ShoppingCartIcon className={styles.cartIcon} />
-            Add
+            {t('product.add')}
           </Button>
         </div>
       </div>

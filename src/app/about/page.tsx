@@ -1,100 +1,78 @@
-import styles from '../page.module.css'
+'use client'
+
+import Image from 'next/image'
+import { useLanguage } from '@/context/LanguageContext'
+import styles from './about.module.css'
 
 export default function AboutPage() {
+  const { t } = useLanguage()
   return (
-    <div style={{ padding: '4rem 2rem', maxWidth: '900px', margin: '0 auto' }}>
-      <h1 style={{
-        fontSize: '3rem',
-        fontWeight: '800',
-        background: 'linear-gradient(135deg, #06B6D4, #EC4899)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        marginBottom: '1rem',
-        textAlign: 'center'
-      }}>
-        About Techland
-      </h1>
-      <p style={{
-        fontSize: '1.25rem',
-        color: '#6B7280',
-        marginBottom: '3rem',
-        textAlign: 'center'
-      }}>
-        Your trusted destination for cutting-edge tech gadgets
-      </p>
-
-      <div style={{
-        display: 'grid',
-        gap: '2rem',
-        marginBottom: '3rem'
-      }}>
-        <div style={{
-          padding: '2rem',
-          background: 'white',
-          borderRadius: '16px',
-          border: '1px solid #E5E7EB',
-          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-        }}>
-          <h2 style={{
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            color: '#1F2937',
-            marginBottom: '1rem'
-          }}>
-            Our Mission
-          </h2>
-          <p style={{ fontSize: '1rem', color: '#6B7280', lineHeight: '1.7' }}>
-            At Techland, we&apos;re passionate about bringing you the latest and greatest tech gadgets from around the world.
-            Whether you&apos;re a gamer, a tech enthusiast, or simply looking to upgrade your digital lifestyle,
-            we have everything you need.
+    <div className={styles.aboutContainer}>
+      {/* Hero Section - Super Dynamic */}
+      <section className={styles.hero}>
+        <div className={styles.heroBackground}>
+          <div className={styles.heroCircle1}></div>
+          <div className={styles.heroCircle2}></div>
+          <div className={styles.heroCircle3}></div>
+        </div>
+        <div className={styles.heroContent}>
+          <h1 className={styles.heroTitle}>
+            {t('about.heroTitle')} <span className={styles.highlight}>{t('about.heroTitleHighlight')}</span>
+          </h1>
+          <p className={styles.heroSubtitle}>
+            {t('about.heroSubtitle')}
           </p>
         </div>
+      </section>
 
-        {/* Why Choose Us Section */}
-        <section className={styles.whySection}>
-          <div className={styles.container}>
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Why Choose Techland?</h2>
+      {/* Our Mission Section - Modern & Fun */}
+      <section className={styles.missionSection}>
+        <div className={styles.container}>
+          <div className={styles.missionGrid}>
+            {/* Content First */}
+            <div className={styles.missionContent}>
+              <h2 className={styles.missionTitle}>
+                {t('about.missionTitle')}
+              </h2>
+              <p className={styles.missionText}>
+                {t('about.missionText1')}
+              </p>
+              <p className={styles.missionText}>
+                {t('about.missionText2')}
+              </p>
+              {/* Stats */}
+              <div className={styles.stats}>
+                <div className={styles.stat}>
+                  <div className={styles.statNumber}>500+</div>
+                  <div className={styles.statLabel}>{t('about.stats.products')}</div>
+                </div>
+                <div className={styles.statDivider} />
+                <div className={styles.stat}>
+                  <div className={styles.statNumber}>10K+</div>
+                  <div className={styles.statLabel}>{t('about.stats.customers')}</div>
+                </div>
+                <div className={styles.statDivider} />
+                <div className={styles.stat}>
+                  <div className={styles.statNumber}>24/7</div>
+                  <div className={styles.statLabel}>{t('about.stats.support')}</div>
+                </div>
+              </div>
             </div>
 
-            <div className={styles.featuresGrid}>
-              <div className={styles.featureCard}>
-                <div className={styles.featureIcon}>🚚</div>
-                <h3 className={styles.featureTitle}>Fast Delivery</h3>
-                <p className={styles.featureText}>
-                  Free shipping on orders over $50. Get your gadgets delivered fast!
-                </p>
-              </div>
-
-              <div className={styles.featureCard}>
-                <div className={styles.featureIcon}>🔒</div>
-                <h3 className={styles.featureTitle}>Secure Payment</h3>
-                <p className={styles.featureText}>
-                  100% secure transactions with encryption. Shop with confidence.
-                </p>
-              </div>
-
-              <div className={styles.featureCard}>
-                <div className={styles.featureIcon}>⭐</div>
-                <h3 className={styles.featureTitle}>Quality Guaranteed</h3>
-                <p className={styles.featureText}>
-                  Only authentic products from trusted brands. Quality you can trust.
-                </p>
-              </div>
-
-              <div className={styles.featureCard}>
-                <div className={styles.featureIcon}>💬</div>
-                <h3 className={styles.featureTitle}>24/7 Support</h3>
-                <p className={styles.featureText}>
-                  Our support team is always ready to help you. Contact us anytime.
-                </p>
-              </div>
+            {/* Image with Cool Effect */}
+            <div className={styles.missionImageWrapper}>
+              <div className={styles.imageGlow}></div>
+              <Image
+                src="https://images.unsplash.com/photo-1636036769389-343bb250f013?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                alt="Gaming setup"
+                fill
+                className={styles.missionImage}
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
             </div>
           </div>
-        </section>
-      </div>
-
+        </div>
+      </section>
     </div>
   )
 }
-
