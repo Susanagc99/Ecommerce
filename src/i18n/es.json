@@ -216,7 +216,7 @@
   "about": {
     "heroTitle": "Somos",
     "heroTitleHighlight": "Techland",
-    "heroSubtitle": "Tu destino tech favorito🚀",
+    "heroSubtitle": "Tu destino tech favorito",
     "missionTitle": "Tecnología que te deja boquiabierto",
     "missionText1": "En Techland, no solo vendemos gadgets — te traemos lo último en tecnología para hacer tu vida más fácil, más divertida y llena de sorpresas. Desde herramientas que impulsan tu productividad hasta los dispositivos más únicos y peculiares que todo amante de la tecnología sueña tener.",
     "missionText2": "Nuestra tienda es un parque de juegos para exploradores, creadores y entusiastas. Aquí encontrarás todo lo que necesitas… y todo lo que has estado deseando.",
@@ -254,6 +254,7 @@
     "failedToFetch": "Error al obtener productos",
     "updateComingSoon": "Actualización de producto próximamente",
     "productCreated": "¡Producto creado exitosamente!",
+    "productUpdated": "¡Producto actualizado exitosamente!",
     "errorSavingProduct": "Error al guardar producto",
     "errorDeletingProduct": "Error al eliminar producto"
   },

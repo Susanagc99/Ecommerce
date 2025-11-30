@@ -69,8 +69,13 @@ export default function LoginPage() {
         login(sessionData)
         showToast.success(`${t('messages.welcomeBack')}, ${data.user.name}!`, { autoClose: 2000 })
 
+        // Redirect based on role: Admin -> Dashboard, Customer -> Home
         setTimeout(() => {
-          router.push('/')
+          if (data.user.role === 'Admin') {
+            router.push('/dashboard')
+          } else {
+            router.push('/')
+          }
         }, 500)
       }
     } catch (error) {

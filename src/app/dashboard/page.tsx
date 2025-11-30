@@ -7,7 +7,7 @@ import { formatPrice, confirmDelete } from '@/lib/utils'
 import { showToast } from '@/lib/toast'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
-import { createProduct } from '@/services/products'
+import { createProduct, updateProduct } from '@/services/products'
 import { CATEGORIES, type CategoryType } from '@/constants/categories'
 import styles from './dashboard.module.css'
 import {
@@ -249,8 +249,32 @@ export default function DashboardPage() {
 
     try {
       if (editingProduct) {
-        // TODO: Implement product update
-        showToast.info(t('messages.updateComingSoon'))
+        // Update existing product
+        const response = await updateProduct(editingProduct._id, {
+          name: formData.name,
+          description: formData.description,
+          price: formData.price,
+          category: formData.category,
+          subcategory: formData.subcategory,
+          stock: formData.stock || '0',
+          featured: formData.featured,
+          file: file || null, // Opcional: solo se envía si hay nueva imagen
+        })
+
+        if (response.success) {
+          handleCloseModal()
+          fetchProducts()
+          
+          // Show success alert with SweetAlert2 after closing modal
+          const { default: Swal } = await import('sweetalert2')
+          await Swal.fire({
+            title: t('messages.productUpdated'),
+            icon: 'success',
+            confirmButtonColor: '#06B6D4',
+            background: '#FFFFFF',
+            color: '#1F2937',
+          })
+        }
       } else {
         // Create new product
         if (!file) {
@@ -269,9 +293,18 @@ export default function DashboardPage() {
         })
 
         if (response.success) {
-          showToast.success(t('messages.productCreated'))
           handleCloseModal()
           fetchProducts()
+        
+          
+          const { default: Swal } = await import('sweetalert2')
+          await Swal.fire({
+            title: t('messages.productCreated'),
+            icon: 'success',
+            confirmButtonColor: '#06B6D4',
+            background: '#FFFFFF',
+            color: '#1F2937',
+          })
         }
       }
     } catch (error: unknown) {

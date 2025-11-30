@@ -23,6 +23,47 @@
   opacity: 0.3;
 }
 
+.heroBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.heroCircle1,
+.heroCircle2,
+.heroCircle3 {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  filter: blur(40px);
+}
+
+.heroCircle1 {
+  width: 400px;
+  height: 400px;
+  top: -100px;
+  left: -100px;
+}
+
+.heroCircle2 {
+  width: 300px;
+  height: 300px;
+  bottom: -50px;
+  right: -50px;
+}
+
+.heroCircle3 {
+  width: 200px;
+  height: 200px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .heroContent {
   position: relative;
   max-width: 800px;
@@ -74,6 +115,17 @@
   box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.3);
 }
 
+.imageGlow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .missionImage {
   object-fit: cover;
   transition: transform 0.3s ease;
@@ -115,10 +167,6 @@
   .missionImageWrapper {
     height: 300px;
   }
-
-  .featuresGrid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 768px) {
@@ -134,26 +182,16 @@
     padding: 3rem 1rem 2rem;
   }
 
-  .missionSection,
-  .whySection {
+  .missionSection {
     padding: 3rem 0;
   }
 
-  .missionTitle,
-  .sectionTitle {
+  .missionTitle {
     font-size: 2rem;
-  }
-
-  .sectionHeader {
-    margin-bottom: 2rem;
   }
 
   .container {
     padding: 0 1rem;
-  }
-
-  .featureImageWrapper {
-    height: 180px;
   }
 }
 
@@ -212,47 +250,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-/* Responsive CTA */
-@media (max-width: 768px) {
-  .ctaSection {
-    padding: 4rem 0;
-  }
-
-  .ctaTitle {
-    font-size: 2.5rem;
-  }
-
-  .ctaText {
-    font-size: 1.125rem;
-    margin-bottom: 2rem;
-  }
-
-  .ctaShape1 {
-    width: 300px;
-    height: 300px;
-  }
-
-  .ctaShape2 {
-    width: 250px;
-    height: 250px;
-  }
-
-  .ctaShape3 {
-    width: 200px;
-    height: 200px;
-  }
-}
-
-@media (max-width: 480px) {
-  .ctaTitle {
-    font-size: 2rem;
-  }
-
-  .ctaText {
-    font-size: 1rem;
   }
 }
 

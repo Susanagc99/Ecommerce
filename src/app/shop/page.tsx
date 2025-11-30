@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import ProductGrid from '@/components/ProductGrid'
 import Pagination from '@/components/Pagination'
 import Input from '@/components/Input'
 import { getProducts } from '@/services/products'
 import { CATEGORIES } from '@/constants/categories'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import styles from './shop.module.css'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { showToast } from '@/lib/toast'
@@ -27,7 +28,9 @@ interface Product {
 }
 
 export default function ShopPage() {
+  const router = useRouter()
   const { t } = useLanguage()
+  const { user, isLoading: authLoading } = useAuth()
   const searchParams = useSearchParams()
   const categoryFromUrl = searchParams.get('category') || ''
 
@@ -36,6 +39,13 @@ export default function ShopPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl)
   const [currentPage, setCurrentPage] = useState(1)
+
+  // Redirect admin users to dashboard
+  useEffect(() => {
+    if (!authLoading && user?.role === 'Admin') {
+      router.push('/dashboard')
+    }
+  }, [user, authLoading, router])
 
   // Get unique categories from CATEGORIES constant
   const categories = useMemo(() => {

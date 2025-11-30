@@ -216,7 +216,7 @@
   "about": {
     "heroTitle": "We're",
     "heroTitleHighlight": "Techland",
-    "heroSubtitle": "The coolest place to get your tech fix 🚀",
+    "heroSubtitle": "The coolest place to get your tech fix",
     "missionTitle": "Tech that makes you go",
     "missionWow": "WOW",
     "missionText1": "At Techland, we don't just sell gadgets — we bring you the latest in technology to make your life easier, more fun, and full of surprises. From tools that boost your productivity to the quirkiest and most unique devices every tech lover dreams of.",
@@ -255,6 +255,7 @@
     "failedToFetch": "Failed to fetch products",
     "updateComingSoon": "Product update coming soon",
     "productCreated": "Product created successfully!",
+    "productUpdated": "Product updated successfully!",
     "errorSavingProduct": "Error saving product",
     "errorDeletingProduct": "Error deleting product"
   },

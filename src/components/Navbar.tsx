@@ -95,10 +95,16 @@ export default function Navbar() {
   return (
     <header className={styles.header}>
       <nav className={styles.navbar}>
-        {/* Logo */}
-        <Link href="/" className={styles.logo}>
-          <span className={styles.logoText}>Techland</span>
-        </Link>
+        {/* Logo - Not clickable for Admin */}
+        {user?.role === 'Admin' ? (
+          <div className={styles.logo}>
+            <span className={styles.logoText}>Techland</span>
+          </div>
+        ) : (
+          <Link href="/" className={styles.logo}>
+            <span className={styles.logoText}>Techland</span>
+          </Link>
+        )}
 
         {/* Desktop Navigation */}
         <ul className={styles.navList}>

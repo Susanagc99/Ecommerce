@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
+import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { formatPrice } from '@/lib/utils'
 import { showToast } from '@/lib/toast'
@@ -21,9 +22,17 @@ import {
 export default function CartPage() {
   const router = useRouter()
   const { t } = useLanguage()
+  const { user, isLoading } = useAuth()
   const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart()
   const [itemCount, setItemCount] = useState(0)
   const [total, setTotal] = useState(0)
+
+  // Redirect admin users to dashboard
+  useEffect(() => {
+    if (!isLoading && user?.role === 'Admin') {
+      router.push('/dashboard')
+    }
+  }, [user, isLoading, router])
 
   // Update item count and total when items change
   useEffect(() => {

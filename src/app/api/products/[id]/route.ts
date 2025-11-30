@@ -46,23 +46,164 @@ export async function GET(
 
 /**
  * PUT /api/products/[id]
- * Actualiza un producto existente (próximamente con soporte para cambiar imagen)
+ * Actualiza un producto existente con soporte para cambiar imagen
  */
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        // TODO: Implementar actualización completa con soporte para cambiar imagen
         await dbConnection();
-        await params; // Para evitar warning de unused
-        
+        const { id } = await params;
+
+        // Buscar el producto existente
+        const existingProduct = await Product.findById(id);
+        if (!existingProduct) {
+            return NextResponse.json(
+                { success: false, message: "Producto no encontrado" },
+                { status: 404 }
+            );
+        }
+
+        // Obtener FormData
+        const formData = await request.formData();
+
+        // Extraer campos del formulario
+        const name = formData.get("name") as string;
+        const description = formData.get("description") as string;
+        const price = formData.get("price") as string;
+        const category = formData.get("category") as string;
+        const subcategory = formData.get("subcategory") as string;
+        const stock = formData.get("stock") as string | null;
+        const featured = formData.get("featured") as string | null;
+        const file = formData.get("file") as File | null;
+
+        // Validar campos requeridos
+        if (!name || !description || !price || !category || !subcategory) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Todos los campos requeridos deben estar presentes",
+                },
+                { status: 400 }
+            );
+        }
+
+        // Preparar datos de actualización
+        const updateData: {
+            name: string;
+            description: string;
+            price: number;
+            category: string;
+            subcategory: string;
+            stock?: number;
+            featured?: boolean;
+            image?: string;
+        } = {
+            name,
+            description,
+            price: parseFloat(price),
+            category,
+            subcategory,
+        };
+
+        // Campos opcionales
+        if (stock !== null) {
+            updateData.stock = parseInt(stock) || 0;
+        }
+        if (featured !== null) {
+            updateData.featured = featured === "true";
+        }
+
+        // Si hay nueva imagen, subirla a Cloudinary y eliminar la vieja
+        if (file && file.size > 0) {
+            // Validar tipo de archivo
+            const validImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+            if (!validImageTypes.includes(file.type)) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: "Solo se permiten archivos de imagen (jpeg, jpg, png, webp)",
+                    },
+                    { status: 400 }
+                );
+            }
+
+            // Convertir archivo a buffer y luego a Data URI para Cloudinary
+            const buffer = await file.arrayBuffer();
+            const dataUri = `data:${file.type};base64,${Buffer.from(buffer).toString("base64")}`;
+
+            // Subir nueva imagen a Cloudinary
+            const uploadResult = await cloudinary.uploader.upload(dataUri, {
+                folder: "techland/products",
+                resource_type: "image",
+                transformation: [
+                    { width: 800, height: 800, crop: "limit" },
+                    { quality: "auto" },
+                    { fetch_format: "auto" },
+                ],
+            });
+
+            console.log("Nueva imagen subida a Cloudinary:", uploadResult.secure_url);
+            updateData.image = uploadResult.secure_url;
+
+            // Eliminar imagen antigua de Cloudinary (si existe)
+            try {
+                const oldImageUrl = existingProduct.image;
+                if (oldImageUrl && oldImageUrl.includes("cloudinary.com")) {
+                    // Extraer public_id de la URL antigua
+                    const urlParts = oldImageUrl.split("/");
+                    const filename = urlParts[urlParts.length - 1];
+                    const publicId = `techland/products/${filename.split(".")[0]}`;
+
+                    await cloudinary.uploader.destroy(publicId);
+                    console.log("Imagen antigua eliminada de Cloudinary:", publicId);
+                }
+            } catch (cloudinaryError) {
+                console.error("Error al eliminar imagen antigua de Cloudinary:", cloudinaryError);
+                // Continuar con la actualización aunque falle la eliminación de la imagen antigua
+            }
+        }
+
+        // Actualizar producto en MongoDB
+        const updatedProduct = await Product.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true, runValidators: true } // new: true devuelve el documento actualizado
+        );
+
+        if (!updatedProduct) {
+            return NextResponse.json(
+                { success: false, message: "Error al actualizar el producto" },
+                { status: 500 }
+            );
+        }
+
+        console.log("✅ Producto actualizado en MongoDB:", updatedProduct._id);
+
         return NextResponse.json(
-            { success: false, message: "Actualización de productos próximamente" },
-            { status: 501 }
+            {
+                success: true,
+                message: "Producto actualizado correctamente",
+                data: updatedProduct,
+            },
+            { status: 200 }
         );
     } catch (error) {
-        console.error("Error al actualizar producto:", error);
+        console.error("❌ Error al actualizar producto:", error);
+
+        // Manejo específico de errores de validación de Mongoose
+        if (error instanceof Error && error.name === "ValidationError") {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Error de validación",
+                    error: error.message,
+                },
+                { status: 400 }
+            );
+        }
+
         return NextResponse.json(
             {
                 success: false,

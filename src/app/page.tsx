@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import HeroSection from '@/components/HeroSection'
 import ProductGrid from '@/components/ProductGrid'
 import Button from '@/components/Button'
 import { getProducts } from '@/services/products'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import styles from './page.module.css'
 import { showToast } from '@/lib/toast'
 
@@ -23,9 +25,18 @@ interface Product {
 }
 
 export default function Home() {
+  const router = useRouter()
   const { t } = useLanguage()
+  const { user, isLoading } = useAuth()
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Redirect admin users to dashboard
+  useEffect(() => {
+    if (!isLoading && user?.role === 'Admin') {
+      router.push('/dashboard')
+    }
+  }, [user, isLoading, router])
 
   // Fetch featured products from API
   useEffect(() => {
@@ -34,7 +45,7 @@ export default function Home() {
         setLoading(true)
         const response = await getProducts({ featured: true })
         if (response.success) {
-          setFeaturedProducts(response.data.slice(0, 6))
+          setFeaturedProducts(response.data) // Show all featured products (no limit)
         } else {
           showToast.error(t('messages.errorLoadingFeatured'))
         }
@@ -47,7 +58,7 @@ export default function Home() {
     }
 
     fetchFeaturedProducts()
-  }, [])
+  }, [t])
 
   // Categories for quick links
   const categories = [

@@ -1,11 +1,24 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import styles from './about.module.css'
 
 export default function AboutPage() {
+  const router = useRouter()
   const { t } = useLanguage()
+  const { user, isLoading } = useAuth()
+
+  // Redirect admin users to dashboard
+  useEffect(() => {
+    if (!isLoading && user?.role === 'Admin') {
+      router.push('/dashboard')
+    }
+  }, [user, isLoading, router])
+
   return (
     <div className={styles.aboutContainer}>
       {/* Hero Section - Super Dynamic */}
@@ -17,7 +30,7 @@ export default function AboutPage() {
         </div>
         <div className={styles.heroContent}>
           <h1 className={styles.heroTitle}>
-            {t('about.heroTitle')} <span className={styles.highlight}>{t('about.heroTitleHighlight')}</span>
+            {t('about.heroTitle')} <span>{t('about.heroTitleHighlight')}</span>
           </h1>
           <p className={styles.heroSubtitle}>
             {t('about.heroSubtitle')}
