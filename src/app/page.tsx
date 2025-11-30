@@ -7,7 +7,7 @@ import ProductGrid from '@/components/ProductGrid'
 import Button from '@/components/Button'
 import { getProducts } from '@/services/products'
 import styles from './page.module.css'
-import { toast } from 'react-toastify'
+import { showToast } from '@/lib/toast'
 
 interface Product {
   _id: string
@@ -34,11 +34,11 @@ export default function Home() {
         if (response.success) {
           setFeaturedProducts(response.data.slice(0, 6))
         } else {
-          toast.error('Error al cargar productos destacados')
+          showToast.error('Error loading featured products')
         }
       } catch (error) {
         console.error('Error fetching featured products:', error)
-        toast.error('Error al cargar productos destacados')
+        showToast.error('Error loading featured products')
       } finally {
         setLoading(false)
       }

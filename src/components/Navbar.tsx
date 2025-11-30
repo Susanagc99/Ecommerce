@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useSession, signOut } from "next-auth/react"
+import { usePathname } from 'next/navigation'
 import styles from '@/styles/Navbar.module.css'
 import {
   HeartIcon,
@@ -18,75 +17,44 @@ import {
   XMarkIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline'
-import { toast } from 'react-toastify'
+import { showToast } from '@/lib/toast'
+import { useAuth } from '@/context/AuthContext'
+import { useCart } from '@/context/CartContext'
 
-// TODO: Descomentar cuando creemos los contexts
-// import { useCart } from '@/context/CartContext'
-
-interface UserSession {
-  id: string
-  username: string
-  name: string
-  email: string
-  role: 'Admin' | 'Customer'
-  isActive: boolean
-  loginTime: string
+interface NavItem {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  requireAuth?: boolean
+  comingSoon?: boolean
 }
 
 export default function Navbar() {
   const pathname = usePathname()
-  const router = useRouter()
-  const { data: session } = useSession()
+  const { user, logout } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [localUser, setLocalUser] = useState<UserSession | null>(null)
 
-  // Combine session user and local user
-  const user = session?.user ? {
-    id: 'google-user',
-    username: session.user.name || 'User',
-    name: session.user.name || 'User',
-    email: session.user.email || '',
-    role: 'Customer' as const,
-    isActive: true,
-    loginTime: new Date().toISOString()
-  } : localUser
+  const { getItemCount } = useCart()
+  const [itemCount, setItemCount] = useState(0)
 
-  // TODO: Descomentar cuando creemos CartContext
-  // const { getItemCount } = useCart()
-  // const itemCount = getItemCount()
-
-  const itemCount = 0
-
-  // Leer usuario del localStorage
+  // Update cart item count
   useEffect(() => {
-    const loadUser = () => {
-      const sessionData = localStorage.getItem('userSession')
-      if (sessionData) {
-        try {
-          const parsedUser = JSON.parse(sessionData)
-          setLocalUser(parsedUser)
-        } catch (error) {
-          console.error('Error parsing user session:', error)
-          localStorage.removeItem('userSession')
-        }
-      } else {
-        setLocalUser(null)
-      }
+    const updateItemCount = () => {
+      setItemCount(getItemCount())
     }
 
-    loadUser()
+    // Update on mount
+    updateItemCount()
 
-    // Escuchar cambios en el localStorage
-    window.addEventListener('storage', loadUser)
-    window.addEventListener('userSessionUpdate', loadUser)
+    // Listen for cart changes
+    window.addEventListener('cartUpdate', updateItemCount)
 
     return () => {
-      window.removeEventListener('storage', loadUser)
-      window.removeEventListener('userSessionUpdate', loadUser)
+      window.removeEventListener('cartUpdate', updateItemCount)
     }
-  }, [])
+  }, [getItemCount])
 
-  // Cerrar menú móvil al cambiar de ruta
+  // Close mobile menu when route changes
   useEffect(() => {
     if (isMobileMenuOpen) {
       setIsMobileMenuOpen(false)
@@ -96,35 +64,27 @@ export default function Navbar() {
   const isActive = (path: string) => pathname === path
 
   const handleLogout = async () => {
-    if (session) {
-      await signOut({ callbackUrl: '/login' })
-    } else {
-      localStorage.removeItem('userSession')
-      setLocalUser(null)
-
-      toast.info('You have been logged out successfully', {
-        position: 'top-right',
-        autoClose: 2000,
-      })
-
-      router.push('/login')
-    }
+    await logout()
   }
 
-  // Navigation items para Admins
-  const adminNavItems = [
+  const handleComingSoon = (label: string) => {
+    showToast.info(`${label} coming soon...`, { autoClose: 2000 })
+  }
+
+  // Navigation items for Admins
+  const adminNavItems: NavItem[] = [
     { href: '/dashboard', label: 'Dashboard', icon: ChartBarIcon },
   ]
 
-  // Navigation items para Customers y usuarios no autenticados
-  const customerNavItems = [
+  // Navigation items for Customers and unauthenticated users
+  const customerNavItems: NavItem[] = [
     { href: '/shop', label: 'Shop', icon: ShoppingBagIcon, requireAuth: false },
-    { href: '/favorites', label: 'Favorites', icon: HeartIcon, requireAuth: true },
-    { href: '/purchases', label: 'My Purchases', icon: TruckIcon, requireAuth: true },
+    { href: '/favorites', label: 'Favorites', icon: HeartIcon, requireAuth: true, comingSoon: true },
+    { href: '/purchases', label: 'My Purchases', icon: TruckIcon, requireAuth: true, comingSoon: true },
     { href: '/about', label: 'About Us', icon: InformationCircleIcon, requireAuth: false },
   ]
 
-  // Determinar qué items mostrar según el rol del usuario
+  // Determine which items to show based on user role
   const visibleNavItems = user?.role === 'Admin'
     ? adminNavItems
     : customerNavItems.filter(item => !item.requireAuth || user)
@@ -143,14 +103,24 @@ export default function Navbar() {
             const Icon = item.icon
             return (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`${styles.navLink} ${isActive(item.href) ? styles.active : ''
-                    }`}
-                >
-                  <Icon className={styles.navIcon} />
-                  <span>{item.label}</span>
-                </Link>
+                {item.comingSoon ? (
+                  <button
+                    onClick={() => handleComingSoon(item.label)}
+                    className={styles.navLink}
+                  >
+                    <Icon className={styles.navIcon} />
+                    <span>{item.label}</span>
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={`${styles.navLink} ${isActive(item.href) ? styles.active : ''
+                      }`}
+                  >
+                    <Icon className={styles.navIcon} />
+                    <span>{item.label}</span>
+                  </Link>
+                )}
               </li>
             )
           })}
@@ -158,7 +128,7 @@ export default function Navbar() {
 
         {/* Right Section - Cart, User, Login */}
         <div className={styles.rightSection}>
-          {/* Cart - Solo visible para Customers y no autenticados */}
+          {/* Cart - Only visible for Customers and unauthenticated users */}
           {user?.role !== 'Admin' && (
             <Link href="/cart" className={styles.cartButton}>
               <ShoppingCartIcon className={styles.icon} />
@@ -214,14 +184,24 @@ export default function Navbar() {
                 const Icon = item.icon
                 return (
                   <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className={`${styles.mobileNavLink} ${isActive(item.href) ? styles.active : ''
-                        }`}
-                    >
-                      <Icon className={styles.navIcon} />
-                      <span>{item.label}</span>
-                    </Link>
+                    {item.comingSoon ? (
+                      <button
+                        onClick={() => handleComingSoon(item.label)}
+                        className={styles.mobileNavLink}
+                      >
+                        <Icon className={styles.navIcon} />
+                        <span>{item.label}</span>
+                      </button>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className={`${styles.mobileNavLink} ${isActive(item.href) ? styles.active : ''
+                          }`}
+                      >
+                        <Icon className={styles.navIcon} />
+                        <span>{item.label}</span>
+                      </Link>
+                    )}
                   </li>
                 )
               })}

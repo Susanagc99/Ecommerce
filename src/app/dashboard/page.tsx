@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Button from '@/components/Button'
-import { toast } from 'react-toastify'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, confirmDelete } from '@/lib/utils'
+import { showToast } from '@/lib/toast'
+import { useAuth } from '@/context/AuthContext'
 import { createProduct } from '@/services/products'
 import { CATEGORIES, type CategoryType } from '@/constants/categories'
 import styles from './dashboard.module.css'
@@ -14,15 +15,6 @@ import {
   PlusIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
-
-interface UserSession {
-  username: string
-  name: string
-  email?: string
-  role: string
-  isActive: boolean
-  loginTime: string
-}
 
 interface Product {
   _id: string
@@ -49,7 +41,7 @@ interface FormErrors {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [user, setUser] = useState<UserSession | null>(null)
+  const { user, isAdmin, isLoading } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -69,23 +61,22 @@ export default function DashboardPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    const session = localStorage.getItem('userSession')
-    if (!session) {
+    if (isLoading) return
+
+    if (!user) {
       router.push('/login')
-    } else {
-      const userData = JSON.parse(session)
-      setUser(userData)
-      
-      // Verificar que sea Admin
-      if (userData.role !== 'Admin') {
-        toast.error('Access denied. Admin only.')
-        router.push('/')
-        return
-      }
-      
-      fetchProducts()
+      return
     }
-  }, [router])
+
+    // Verify user is Admin
+    if (!isAdmin) {
+      showToast.error('Access denied. Admin only.')
+      router.push('/')
+      return
+    }
+
+    fetchProducts()
+  }, [user, isAdmin, isLoading, router])
 
   const fetchProducts = async () => {
     try {
@@ -95,11 +86,11 @@ export default function DashboardPage() {
         const result = await response.json()
         setProducts(result.data || [])
       } else {
-        toast.error('Failed to fetch products')
+        showToast.error('Failed to fetch products')
       }
     } catch (error) {
       console.error('Error fetching products:', error)
-      toast.error('Error loading products')
+      showToast.error('Error loading products')
     } finally {
       setLoading(false)
     }
@@ -160,40 +151,40 @@ export default function DashboardPage() {
     const newErrors: FormErrors = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'El nombre del producto es requerido'
+      newErrors.name = 'Product name is required'
     } else if (formData.name.trim().length < 3) {
-      newErrors.name = 'El nombre debe tener al menos 3 caracteres'
+      newErrors.name = 'Name must be at least 3 characters'
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'La descripción es requerida'
+      newErrors.description = 'Description is required'
     }
 
     if (!formData.price) {
-      newErrors.price = 'El precio es requerido'
+      newErrors.price = 'Price is required'
     } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
-      newErrors.price = 'El precio debe ser un número válido mayor o igual a 0'
+      newErrors.price = 'Price must be a valid number greater than or equal to 0'
     }
 
     if (!formData.category) {
-      newErrors.category = 'La categoría es requerida'
+      newErrors.category = 'Category is required'
     }
 
     if (!formData.subcategory) {
-      newErrors.subcategory = 'La subcategoría es requerida'
+      newErrors.subcategory = 'Subcategory is required'
     }
 
-    // Validar archivo solo si estamos creando un producto nuevo
+    // Validate file only if creating a new product
     if (!editingProduct && !file) {
-      newErrors.file = 'Debes seleccionar una imagen'
+      newErrors.file = 'You must select an image'
     } else if (file && !isValidFileType(file)) {
-      newErrors.file = 'Solo se permiten imágenes (JPEG, JPG, PNG, WEBP)'
+      newErrors.file = 'Only images are allowed (JPEG, JPG, PNG, WEBP)'
     } else if (file && file.size > 5 * 1024 * 1024) {
-      newErrors.file = 'La imagen no debe superar 5MB'
+      newErrors.file = 'Image must not exceed 5MB'
     }
 
     if (formData.stock && (isNaN(parseInt(formData.stock)) || parseInt(formData.stock) < 0)) {
-      newErrors.stock = 'El stock debe ser un número válido mayor o igual a 0'
+      newErrors.stock = 'Stock must be a valid number greater than or equal to 0'
     }
 
     setErrors(newErrors)
@@ -256,12 +247,12 @@ export default function DashboardPage() {
 
     try {
       if (editingProduct) {
-        // TODO: Implementar actualización de producto
-        toast.info('Actualización de productos próximamente')
+        // TODO: Implement product update
+        showToast.info('Product update coming soon')
       } else {
-        // Crear nuevo producto
+        // Create new product
         if (!file) {
-          throw new Error('Archivo no disponible')
+          throw new Error('File not available')
         }
 
         const response = await createProduct({
@@ -276,7 +267,7 @@ export default function DashboardPage() {
         })
 
         if (response.success) {
-          toast.success('Producto creado exitosamente! 🎉')
+          showToast.success('Product created successfully!')
           handleCloseModal()
           fetchProducts()
         }
@@ -286,21 +277,32 @@ export default function DashboardPage() {
       if (error instanceof Error && 'response' in error) {
         const axiosError = error as { response?: { data?: { message?: string } } }
         setErrors({
-          submit: axiosError.response?.data?.message || 'Error al guardar producto'
+          submit: axiosError.response?.data?.message || 'Error saving product'
         })
       } else {
         setErrors({
-          submit: 'Error al guardar producto'
+          submit: 'Error saving product'
         })
       }
-      toast.error('Error al guardar producto')
+      showToast.error('Error saving product')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este producto?')) return
+    // Find product to get its name for the alert
+    const product = products.find((p) => p._id === id)
+    const productName = product?.name || 'this product'
+
+    // Show confirmation dialog with SweetAlert2
+    const confirmed = await confirmDelete(
+      'Are you sure?',
+      `You are about to delete "${productName}". This action cannot be undone!`,
+      'Yes, delete it!'
+    )
+
+    if (!confirmed) return
 
     try {
       const response = await fetch(`/api/products/${id}`, {
@@ -308,14 +310,24 @@ export default function DashboardPage() {
       })
 
       if (response.ok) {
-        toast.success('Producto eliminado exitosamente! 🗑️')
+        // Show success alert with SweetAlert2
+        const { default: Swal } = await import('sweetalert2')
+        await Swal.fire({
+          title: 'Deleted!',
+          text: `"${productName}" has been deleted successfully.`,
+          icon: 'success',
+          confirmButtonColor: '#06B6D4',
+          background: '#FFFFFF',
+          color: '#1F2937',
+        })
+        
         fetchProducts()
       } else {
-        toast.error('Error al eliminar producto')
+        showToast.error('Error deleting product')
       }
     } catch (error) {
       console.error('Error deleting product:', error)
-      toast.error('Error al eliminar producto')
+      showToast.error('Error deleting product')
     }
   }
 
@@ -440,16 +452,16 @@ export default function DashboardPage() {
 
               <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.formGrid}>
-                  {/* Nombre del Producto */}
+                  {/* Product Name */}
                   <div className={styles.formGroup}>
-                    <label htmlFor="name">Nombre del Producto *</label>
+                    <label htmlFor="name">Product Name *</label>
                     <input
                       id="name"
                       name="name"
                       type="text"
                       value={formData.name}
                       onChange={handleInputChange}
-                      placeholder="Ej: PlayStation 5 Console"
+                      placeholder="E.g: PlayStation 5 Console"
                       disabled={isSubmitting}
                     />
                     {errors.name && (
@@ -457,9 +469,9 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Precio */}
+                  {/* Price */}
                   <div className={styles.formGroup}>
-                    <label htmlFor="price">Precio (COP) *</label>
+                    <label htmlFor="price">Price (COP) *</label>
                     <input
                       id="price"
                       name="price"
@@ -476,9 +488,9 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Categoría */}
+                  {/* Category */}
                   <div className={styles.formGroup}>
-                    <label htmlFor="category">Categoría *</label>
+                    <label htmlFor="category">Category *</label>
                     <select
                       id="category"
                       name="category"
@@ -486,7 +498,7 @@ export default function DashboardPage() {
                       onChange={handleInputChange}
                       disabled={isSubmitting}
                     >
-                      <option value="">Selecciona una categoría</option>
+                      <option value="">Select a category</option>
                       {Object.keys(CATEGORIES).map((cat) => (
                         <option key={cat} value={cat}>
                           {cat}
@@ -498,9 +510,9 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Subcategoría */}
+                  {/* Subcategory */}
                   <div className={styles.formGroup}>
-                    <label htmlFor="subcategory">Subcategoría *</label>
+                    <label htmlFor="subcategory">Subcategory *</label>
                     <select
                       id="subcategory"
                       name="subcategory"
@@ -510,8 +522,8 @@ export default function DashboardPage() {
                     >
                       <option value="">
                         {formData.category
-                          ? 'Selecciona una subcategoría'
-                          : 'Primero selecciona una categoría'}
+                          ? 'Select a subcategory'
+                          : 'First select a category'}
                       </option>
                       {formData.category &&
                         getSubcategories(formData.category).map((subcat) => (
@@ -543,10 +555,10 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Imagen */}
+                  {/* Image */}
                   <div className={styles.formGroup}>
                     <label htmlFor="file">
-                      Imagen del Producto {!editingProduct && '*'}
+                      Product Image {!editingProduct && '*'}
                     </label>
                     <input
                       id="file"
@@ -557,15 +569,15 @@ export default function DashboardPage() {
                       disabled={isSubmitting}
                     />
                     <p className={styles.helpText}>
-                      Formatos: JPG, PNG, WEBP (máximo 5MB)
+                      Formats: JPG, PNG, WEBP (max 5MB)
                     </p>
                     {file && (
                       <div className={styles.fileInfo}>
                         <p className={styles.fileName}>
-                          📄 {file.name}
+                          {file.name}
                         </p>
                         <p className={styles.fileSize}>
-                          Tamaño: {(file.size / 1024 / 1024).toFixed(2)}MB
+                          Size: {(file.size / 1024 / 1024).toFixed(2)}MB
                         </p>
                       </div>
                     )}
@@ -574,15 +586,15 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Description - Ocupa todo el ancho */}
+                  {/* Description - Full width */}
                   <div className={styles.formGroupFull}>
-                    <label htmlFor="description">Descripción *</label>
+                    <label htmlFor="description">Description *</label>
                     <textarea
                       id="description"
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
-                      placeholder="Describe las características del producto..."
+                      placeholder="Describe the product features..."
                       rows={3}
                       disabled={isSubmitting}
                     />
@@ -591,10 +603,10 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Preview de Imagen */}
+                  {/* Image Preview */}
                   {imagePreview && (
                     <div className={styles.formGroupFull}>
-                      <label>Vista Previa</label>
+                      <label>Preview</label>
                       <div className={styles.imagePreview}>
                         <img src={imagePreview} alt="Preview" />
                       </div>
@@ -613,19 +625,19 @@ export default function DashboardPage() {
                         }
                         disabled={isSubmitting}
                       />
-                      <span>Producto Destacado</span>
+                      <span>Featured Product</span>
                     </label>
                   </div>
                 </div>
 
-                {/* Mensaje de error general */}
+                {/* General error message */}
                 {errors.submit && (
                   <div className={styles.errorAlert}>
                     <p>{errors.submit}</p>
                   </div>
                 )}
 
-                {/* Botones */}
+                {/* Buttons */}
                 <div className={styles.modalActions}>
                   <Button
                     type="button"
@@ -633,14 +645,14 @@ export default function DashboardPage() {
                     variant="outline"
                     disabled={isSubmitting}
                   >
-                    Cancelar
+                    Cancel
                   </Button>
                   <Button type="submit" variant="primary" disabled={isSubmitting}>
                     {isSubmitting
-                      ? 'Guardando...'
+                      ? 'Saving...'
                       : editingProduct
-                      ? 'Actualizar Producto'
-                      : 'Crear Producto'}
+                      ? 'Update Product'
+                      : 'Create Product'}
                   </Button>
                 </div>
               </form>

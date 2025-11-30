@@ -4,9 +4,10 @@ import { useEffect } from 'react'
 import Image from 'next/image'
 import Button from './Button'
 import { formatPrice } from '@/lib/utils'
+import { showToast } from '@/lib/toast'
+import { useCart } from '@/context/CartContext'
 import styles from '@/styles/ProductModal.module.css'
 import { XMarkIcon, ShoppingCartIcon, HeartIcon } from '@heroicons/react/24/outline'
-import { toast } from 'react-toastify'
 
 export interface ProductDetail {
   id: string
@@ -25,6 +26,8 @@ interface ProductModalProps {
 }
 
 export default function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
+  const { addToCart } = useCart()
+
   // Close modal on ESC key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -43,31 +46,22 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
   if (!isOpen || !product) return null
 
   const handleAddToCart = () => {
-    toast.success(`${product.name} added to cart! 🛒`, {
-      position: 'top-right',
-      autoClose: 2000,
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
     })
+    showToast.success(`${product.name} added to cart!`, { autoClose: 2000 })
   }
 
   const handleAddToFavorites = () => {
-    toast.success(`${product.name} added to favorites! ❤️`, {
-      position: 'top-right',
-      autoClose: 2000,
-    })
+    showToast.success(`${product.name} added to favorites!`, { autoClose: 2000 })
   }
 
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className={styles.closeButton}
-          aria-label="Close modal"
-        >
-          <XMarkIcon className={styles.closeIcon} />
-        </button>
-
         <div className={styles.content}>
           {/* Image Section */}
           <div className={styles.imageSection}>
@@ -124,39 +118,13 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
                 {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
               </Button>
               
-              <Button
+              <button
                 onClick={handleAddToFavorites}
-                size="lg"
-                variant="outline"
                 className={styles.favoriteButton}
+                aria-label="Add to favorites"
               >
-                <HeartIcon className={styles.actionIcon} />
-              </Button>
-            </div>
-
-            {/* Features */}
-            <div className={styles.features}>
-              <div className={styles.feature}>
-                <span className={styles.featureIcon}>🚚</span>
-                <div>
-                  <div className={styles.featureTitle}>Free Shipping</div>
-                  <div className={styles.featureText}>On orders over $50</div>
-                </div>
-              </div>
-              <div className={styles.feature}>
-                <span className={styles.featureIcon}>🔒</span>
-                <div>
-                  <div className={styles.featureTitle}>Secure Payment</div>
-                  <div className={styles.featureText}>100% secure transaction</div>
-                </div>
-              </div>
-              <div className={styles.feature}>
-                <span className={styles.featureIcon}>↩️</span>
-                <div>
-                  <div className={styles.featureTitle}>Easy Returns</div>
-                  <div className={styles.featureText}>30 days return policy</div>
-                </div>
-              </div>
+                <HeartIcon style={{ width: '24px', height: '24px' }} />
+              </button>
             </div>
           </div>
         </div>

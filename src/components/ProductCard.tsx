@@ -2,16 +2,15 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
-import { toast } from 'react-toastify'
 import Button from './Button'
+import ProductModal, { ProductDetail } from './ProductModal'
 import { formatPrice } from '@/lib/utils'
+import { showToast } from '@/lib/toast'
 import styles from '@/styles/ProductCard.module.css'
 import { HeartIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 
-// TODO: Descomentar cuando creemos el CartContext
-// import { useCart } from '@/context/CartContext'
+import { useCart } from '@/context/CartContext'
 
 interface ProductCardProps {
   id: string
@@ -19,22 +18,28 @@ interface ProductCardProps {
   price: number
   image: string
   category?: string
+  description?: string
+  stock?: number
 }
 
-export default function ProductCard({ id, name, price, image, category }: ProductCardProps) {
+export default function ProductCard({ id, name, price, image, category, description, stock }: ProductCardProps) {
   const [isFavorite, setIsFavorite] = useState(false)
-  
-  // TODO: Descomentar cuando creemos CartContext
-  // const { addToCart } = useCart()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { addToCart } = useCart()
+
+  const productDetail: ProductDetail = {
+    id,
+    name,
+    price,
+    image,
+    category: category || 'Uncategorized',
+    description: description || 'No description available.',
+    stock,
+  }
 
   const handleAddToCart = () => {
-    // TODO: Implementar cuando tengamos CartContext
-    // addToCart({ id, name, price, image })
-    toast.success(`${name} added to cart! 🛒`, {
-      position: 'top-right',
-      autoClose: 2000,
-      theme: 'light',
-    })
+    addToCart({ id, name, price, image })
+    showToast.success(`${name} added to cart!`, { autoClose: 2000 })
   }
 
   const toggleFavorite = (e: React.MouseEvent) => {
@@ -42,58 +47,62 @@ export default function ProductCard({ id, name, price, image, category }: Produc
     setIsFavorite(!isFavorite)
     
     if (!isFavorite) {
-      toast.success(`${name} added to favorites! ❤️`, {
-        position: 'top-right',
-        autoClose: 2000,
-        theme: 'light',
-      })
+      showToast.success(`${name} added to favorites!`, { autoClose: 2000 })
     } else {
-      toast.info(`${name} removed from favorites`, {
-        position: 'top-right',
-        autoClose: 2000,
-        theme: 'light',
-      })
+      showToast.info(`${name} removed from favorites`, { autoClose: 2000 })
     }
   }
 
   return (
-    <div className={styles.card}>
-      {/* Image */}
-      <Link href={`/product/${id}`} className={styles.imageWrapper}>
-        <Image
-          src={image}
-          alt={name}
-          fill
-          className={styles.image}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
-        
-        {/* Favorite Button */}
-        <button
-          onClick={toggleFavorite}
-          className={`${styles.favoriteButton} ${isFavorite ? styles.favoriteActive : ''}`}
-          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+    <>
+      <div className={styles.card}>
+        {/* Image */}
+        <div
+          onClick={() => setIsModalOpen(true)}
+          className={styles.imageWrapper}
+          style={{ cursor: 'pointer' }}
         >
-          {isFavorite ? (
-            <HeartIconSolid className={styles.heartIcon} />
-          ) : (
-            <HeartIcon className={styles.heartIcon} />
+          <Image
+            src={image}
+            alt={name}
+            fill
+            className={styles.image}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+          
+          {/* Favorite Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleFavorite(e)
+            }}
+            className={`${styles.favoriteButton} ${isFavorite ? styles.favoriteActive : ''}`}
+            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            {isFavorite ? (
+              <HeartIconSolid className={styles.heartIcon} />
+            ) : (
+              <HeartIcon className={styles.heartIcon} />
+            )}
+          </button>
+
+          {/* Category Badge */}
+          {category && (
+            <div className={styles.categoryBadge}>
+              {category}
+            </div>
           )}
-        </button>
+        </div>
 
-        {/* Category Badge */}
-        {category && (
-          <div className={styles.categoryBadge}>
-            {category}
+        {/* Content */}
+        <div className={styles.content}>
+          <div
+            onClick={() => setIsModalOpen(true)}
+            className={styles.nameLink}
+            style={{ cursor: 'pointer' }}
+          >
+            <h3 className={styles.name}>{name}</h3>
           </div>
-        )}
-      </Link>
-
-      {/* Content */}
-      <div className={styles.content}>
-        <Link href={`/product/${id}`} className={styles.nameLink}>
-          <h3 className={styles.name}>{name}</h3>
-        </Link>
 
         <div className={styles.footer}>
           <div className={styles.priceWrapper}>
@@ -111,7 +120,15 @@ export default function ProductCard({ id, name, price, image, category }: Produc
           </Button>
         </div>
       </div>
-    </div>
+      </div>
+
+      {/* Product Modal */}
+      <ProductModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={productDetail}
+      />
+    </>
   )
 }
 

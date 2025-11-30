@@ -10,6 +10,7 @@ export interface Product {
   image: string
   category?: string
   description?: string
+  stock?: number
 }
 
 interface ProductGridProps {
@@ -57,6 +58,8 @@ export default function ProductGrid({ products, loading = false }: ProductGridPr
           price={product.price}
           image={product.image}
           category={product.category}
+          description={product.description}
+          stock={product.stock}
         />
       ))}
     </div>

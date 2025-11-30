@@ -201,10 +201,28 @@
 
 .favoriteButton {
   width: 56px;
+  height: 56px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+}
+
+.favoriteButton:hover {
+  border-color: var(--secondary);
+  background: var(--background-soft);
+  color: var(--secondary);
+  transform: scale(1.05);
+}
+
+.favoriteButton:active {
+  transform: scale(0.95);
 }
 
 .actionIcon {

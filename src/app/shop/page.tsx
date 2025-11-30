@@ -9,7 +9,7 @@ import { getProducts } from '@/services/products'
 import { CATEGORIES } from '@/constants/categories'
 import styles from './shop.module.css'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { toast } from 'react-toastify'
+import { showToast } from '@/lib/toast'
 
 const ITEMS_PER_PAGE = 8
 
@@ -49,11 +49,11 @@ export default function ShopPage() {
         if (response.success) {
           setProducts(response.data)
         } else {
-          toast.error('Error al cargar productos')
+          showToast.error('Error loading products')
         }
       } catch (error) {
         console.error('Error fetching products:', error)
-        toast.error('Error al cargar productos')
+        showToast.error('Error loading products')
       } finally {
         setLoading(false)
       }
@@ -98,7 +98,7 @@ export default function ShopPage() {
         <div className={styles.container}>
           <div className={styles.loading}>
             <div className={styles.spinner} />
-            <p>Cargando productos...</p>
+            <p>Loading products...</p>
           </div>
         </div>
       </div>
@@ -166,7 +166,7 @@ export default function ShopPage() {
         {/* Products Grid */}
         {filteredProducts.length === 0 ? (
           <div className={styles.noProducts}>
-            <p>No se encontraron productos.</p>
+            <p>No products found.</p>
           </div>
         ) : (
           <ProductGrid products={paginatedProducts} />

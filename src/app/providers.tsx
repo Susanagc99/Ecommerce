@@ -1,25 +1,20 @@
 'use client'
 
 import { SessionProvider } from "next-auth/react"
-import { ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import 'sweetalert2/dist/sweetalert2.min.css'
+import { AuthProvider } from '@/context/AuthContext'
+import { CartProvider } from '@/context/CartContext'
+import ToastContainer from '@/components/ToastContainer'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      {children}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      <AuthProvider>
+        <CartProvider>
+          <ToastContainer />
+          {children}
+        </CartProvider>
+      </AuthProvider>
     </SessionProvider>
   )
 }

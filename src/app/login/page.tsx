@@ -7,25 +7,26 @@ import { signIn } from 'next-auth/react'
 import axios from 'axios'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
-import { toast } from 'react-toastify'
+import { showToast } from '@/lib/toast'
+import { useAuth } from '@/context/AuthContext'
 import styles from './login.module.css'
 import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
 
 export default function LoginPage() {
   const router = useRouter()
+  const { user: currentUser, login } = useAuth()
   const [user, setUser] = useState('')
   const [pass, setPass] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // Redirigir si ya hay sesión
-    const session = localStorage.getItem('userSession')
-    if (session) {
+    // Redirect if already logged in
+    if (currentUser) {
       router.push('/')
     }
-  }, [router])
+  }, [currentUser, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,7 +53,7 @@ export default function LoginPage() {
       })
 
       if (data.success) {
-        // Login exitoso
+        // Login successful - use AuthContext
         const sessionData = {
           id: data.user.id,
           username: data.user.username,
@@ -63,15 +64,8 @@ export default function LoginPage() {
           loginTime: new Date().toISOString(),
         }
 
-        localStorage.setItem('userSession', JSON.stringify(sessionData))
-
-        // Disparar evento para actualizar el Navbar
-        window.dispatchEvent(new Event('userSessionUpdate'))
-
-        toast.success(`Welcome back, ${data.user.name}!`, {
-          position: 'top-right',
-          autoClose: 2000,
-        })
+        login(sessionData)
+        showToast.success(`Welcome back, ${data.user.name}!`, { autoClose: 2000 })
 
         setTimeout(() => {
           router.push('/')
@@ -84,14 +78,10 @@ export default function LoginPage() {
       if (axios.isAxiosError(error) && error.response) {
         const errorMessage = error.response.data.error || 'Invalid username or password'
         setError(errorMessage)
-        toast.error(errorMessage, {
-          position: 'top-right',
-        })
+        showToast.error(errorMessage)
       } else {
         setError('Connection error. Please try again.')
-        toast.error('Connection error. Please try again.', {
-          position: 'top-right',
-        })
+        showToast.error('Connection error. Please try again.')
       }
     }
 

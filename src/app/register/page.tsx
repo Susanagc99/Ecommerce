@@ -6,12 +6,14 @@ import Link from 'next/link'
 import axios from 'axios'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
-import { toast } from 'react-toastify'
+import { showToast } from '@/lib/toast'
+import { useAuth } from '@/context/AuthContext'
 import styles from '../login/login.module.css'
 import { UserIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -67,9 +69,7 @@ export default function RegisterPage() {
     e.preventDefault()
 
     if (!validateForm()) {
-      toast.error('Please fix the errors in the form', {
-        position: 'top-right',
-      })
+      showToast.error('Please fix the errors in the form')
       return
     }
 
@@ -85,13 +85,10 @@ export default function RegisterPage() {
       })
 
       if (data.success) {
-        // Registro exitoso
-        toast.success('Account created successfully!', {
-          position: 'top-right',
-          autoClose: 2000,
-        })
+        // Registration successful
+        showToast.success('Account created successfully!', { autoClose: 2000 })
 
-        // Auto-login después del registro
+        // Auto-login after registration using AuthContext
         const sessionData = {
           id: data.user.id,
           username: data.user.username,
@@ -102,10 +99,7 @@ export default function RegisterPage() {
           loginTime: new Date().toISOString(),
         }
 
-        localStorage.setItem('userSession', JSON.stringify(sessionData))
-
-        // Disparar evento para actualizar el Navbar
-        window.dispatchEvent(new Event('userSessionUpdate'))
+        login(sessionData)
 
         setTimeout(() => {
           router.push('/')
@@ -117,9 +111,7 @@ export default function RegisterPage() {
       // Manejar errores de axios
       if (axios.isAxiosError(error) && error.response) {
         const errorMessage = error.response.data.error || 'Registration failed. Please try again.'
-        toast.error(errorMessage, {
-          position: 'top-right',
-        })
+        showToast.error(errorMessage)
 
         // Establecer errores específicos si los hay
         if (errorMessage.includes('Username')) {
@@ -128,9 +120,7 @@ export default function RegisterPage() {
           setErrors({ ...errors, email: errorMessage })
         }
       } else {
-        toast.error('Connection error. Please try again.', {
-          position: 'top-right',
-        })
+        showToast.error('Connection error. Please try again.')
       }
     }
 
