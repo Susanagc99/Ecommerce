@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import ProductGrid from '@/components/ProductGrid'
 import Pagination from '@/components/Pagination'
@@ -27,7 +27,7 @@ interface Product {
   featured: boolean
 }
 
-export default function ShopPage() {
+function ShopContent() {
   const router = useRouter()
   const { t } = useLanguage()
   const { user, isLoading: authLoading } = useAuth()
@@ -202,6 +202,23 @@ export default function ShopPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <div className={styles.shop}>
+        <div className={styles.container}>
+          <div className={styles.loading}>
+            <div className={styles.spinner} />
+            <p>Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <ShopContent />
+    </Suspense>
   )
 }
 
