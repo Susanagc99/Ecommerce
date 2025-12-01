@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnection from "@/lib/database";
 import cloudinary from "@/lib/cloudinary";
 import Product from "@/database/models/products";
+import { createProductSchema } from "@/lib/productSchemas";
 
 /**
  * GET /api/products
@@ -82,12 +83,33 @@ export async function POST(request: NextRequest) {
         const featured = formData.get("featured") as string;
         const file = formData.get("file") as File;
 
-        // Validar campos requeridos
-        if (!name || !description || !price || !category || !subcategory || !file) {
+        // Validar que el archivo existe
+        if (!file || !(file instanceof File)) {
             return NextResponse.json(
                 { 
                     success: false, 
-                    message: "Todos los campos son requeridos (name, description, price, category, subcategory, file)" 
+                    message: "El archivo de imagen es requerido" 
+                },
+                { status: 400 }
+            );
+        }
+
+        // Validar datos con Yup
+        try {
+            await createProductSchema.validate({
+                name,
+                description,
+                price,
+                category,
+                subcategory,
+                stock: stock || undefined,
+                featured: featured || undefined,
+            });
+        } catch (error: any) {
+            return NextResponse.json(
+                { 
+                    success: false, 
+                    message: error.message || "Error de validación" 
                 },
                 { status: 400 }
             );

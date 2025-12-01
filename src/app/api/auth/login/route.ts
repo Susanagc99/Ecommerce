@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnection from '@/lib/database';
 import User from '@/database/models/users';
+import { loginSchema } from '@/lib/authSchemas';
 
 export async function POST(request: NextRequest) {
     try {
@@ -8,15 +9,19 @@ export async function POST(request: NextRequest) {
         await dbConnection();
 
         // Obtener datos del body
-        const { username, password } = await request.json();
+        const body = await request.json();
 
-        // Validar que vengan los campos
-        if (!username || !password) {
+        // Validar datos con Yup
+        try {
+            await loginSchema.validate(body);
+        } catch (error: any) {
             return NextResponse.json(
-                { error: 'Username and password are required' },
+                { error: error.message || 'Error de validación' },
                 { status: 400 }
             );
         }
+
+        const { username, password } = body;
 
         // Buscar usuario en la base de datos
         const user = await User.findOne({

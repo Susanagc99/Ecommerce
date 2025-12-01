@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnection from "@/lib/database";
 import cloudinary from "@/lib/cloudinary";
 import Product from "@/database/models/products";
+import { updateProductSchema } from "@/lib/productSchemas";
 
 /**
  * GET /api/products/[id]
@@ -69,21 +70,46 @@ export async function PUT(
         const formData = await request.formData();
 
         // Extraer campos del formulario
-        const name = formData.get("name") as string;
-        const description = formData.get("description") as string;
-        const price = formData.get("price") as string;
-        const category = formData.get("category") as string;
-        const subcategory = formData.get("subcategory") as string;
+        const name = formData.get("name") as string | null;
+        const description = formData.get("description") as string | null;
+        const price = formData.get("price") as string | null;
+        const category = formData.get("category") as string | null;
+        const subcategory = formData.get("subcategory") as string | null;
         const stock = formData.get("stock") as string | null;
         const featured = formData.get("featured") as string | null;
         const file = formData.get("file") as File | null;
 
-        // Validar campos requeridos
-        if (!name || !description || !price || !category || !subcategory) {
+        // Preparar objeto para validación (solo campos que vienen)
+        const dataToValidate: Record<string, string | undefined> = {};
+        if (name) dataToValidate.name = name;
+        if (description) dataToValidate.description = description;
+        if (price) dataToValidate.price = price;
+        if (category) dataToValidate.category = category;
+        if (subcategory) dataToValidate.subcategory = subcategory;
+        if (stock !== null) dataToValidate.stock = stock;
+        if (featured !== null) dataToValidate.featured = featured;
+
+        // Validar datos con Yup (solo los campos que vienen)
+        try {
+            await updateProductSchema.validate(dataToValidate, {
+                abortEarly: false, // Validar todos los campos, no solo el primero con error
+            });
+        } catch (error: any) {
+            return NextResponse.json(
+                { 
+                    success: false, 
+                    message: error.message || "Error de validación" 
+                },
+                { status: 400 }
+            );
+        }
+
+        // Validar que al menos un campo viene para actualizar
+        if (!name && !description && !price && !category && !subcategory && !stock && !featured && !file) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Todos los campos requeridos deben estar presentes",
+                    message: "Debe proporcionar al menos un campo para actualizar",
                 },
                 { status: 400 }
             );

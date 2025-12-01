@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnection from '@/lib/database';
 import User from '@/database/models/users';
+import { registerSchema } from '@/lib/authSchemas';
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,40 +9,19 @@ export async function POST(request: NextRequest) {
     await dbConnection();
 
     // Obtener datos del body
-    const { name, email, username, password } = await request.json();
+    const body = await request.json();
 
-    // Validar que vengan todos los campos
-    if (!name || !email || !username || !password) {
+    // Validar datos con Yup
+    try {
+      await registerSchema.validate(body);
+    } catch (error: any) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: error.message || 'Error de validación' },
         { status: 400 }
       );
     }
 
-    // Validar longitud del username
-    if (username.trim().length < 3) {
-      return NextResponse.json(
-        { error: 'Username must be at least 3 characters' },
-        { status: 400 }
-      );
-    }
-
-    // Validar longitud de la contraseña
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
-        { status: 400 }
-      );
-    }
-
-    // Validar formato de email
-    const emailRegex = /^\S+@\S+\.\S+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Please provide a valid email' },
-        { status: 400 }
-      );
-    }
+    const { name, email, username, password } = body;
 
     // Verificar si ya existe el username
     const existingUsername = await User.findOne({
