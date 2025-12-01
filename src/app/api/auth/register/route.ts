@@ -4,7 +4,6 @@ import User from '@/database/models/users';
 import { registerSchema } from '@/lib/authSchemas';
 import { sendEmail } from '@/lib/email';
 import { welcomeEmailTemplate } from '@/lib/emailTemplates/welcome';
-import { newUserEmailTemplate } from '@/lib/emailTemplates/newUser';
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,21 +68,6 @@ export async function POST(request: NextRequest) {
       });
     } catch (emailError) {
       console.error('Error enviando email de bienvenida:', emailError);
-      // No fallar el registro si el email falla
-    }
-
-    // Enviar notificación al admin sobre nuevo usuario (no bloquea si falla)
-    try {
-      const admin = await User.findOne({ role: 'Admin' });
-      if (admin && admin.email) {
-        await sendEmail({
-          to: admin.email,
-          subject: 'Nuevo Usuario Registrado en Techland',
-          html: newUserEmailTemplate(newUser.name, newUser.email, newUser.username),
-        });
-      }
-    } catch (emailError) {
-      console.error('Error enviando notificación al admin:', emailError);
       // No fallar el registro si el email falla
     }
 
