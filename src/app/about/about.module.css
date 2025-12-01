@@ -167,6 +167,12 @@
   .missionImageWrapper {
     height: 300px;
   }
+  
+  .stats {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -179,19 +185,99 @@
   }
 
   .hero {
-    padding: 3rem 1rem 2rem;
+    padding: 2.5rem 1rem 2rem;
+  }
+  
+  .heroContent {
+    padding: 0 0.5rem;
   }
 
   .missionSection {
-    padding: 3rem 0;
+    padding: 2.5rem 0;
+  }
+  
+  .missionGrid {
+    gap: 1.5rem;
   }
 
   .missionTitle {
-    font-size: 2rem;
+    font-size: 1.75rem;
+  }
+  
+  .missionText {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  
+  .missionImageWrapper {
+    height: 250px;
   }
 
   .container {
     padding: 0 1rem;
+  }
+  
+  .stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .stat {
+    width: 100%;
+  }
+  
+  .statDivider {
+    display: none;
+  }
+  
+  .statNumber {
+    font-size: 1.5rem;
+  }
+  
+  .statLabel {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroTitle {
+    font-size: 2rem;
+  }
+
+  .heroSubtitle {
+    font-size: 1rem;
+  }
+
+  .hero {
+    padding: 2rem 0.75rem 1.5rem;
+  }
+  
+  .missionSection {
+    padding: 2rem 0;
+  }
+  
+  .missionTitle {
+    font-size: 1.5rem;
+  }
+  
+  .missionText {
+    font-size: 0.9375rem;
+  }
+  
+  .missionImageWrapper {
+    height: 200px;
+  }
+  
+  .container {
+    padding: 0 0.75rem;
+  }
+  
+  .stats {
+    padding: 0.875rem;
   }
 }
 

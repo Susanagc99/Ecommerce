@@ -62,7 +62,7 @@ export default function Navbar() {
     if (isMobileMenuOpen) {
       setIsMobileMenuOpen(false)
     }
-  }, [pathname, isMobileMenuOpen])
+  }, [pathname])
 
   const isActive = (path: string) => pathname === path
 
@@ -176,7 +176,10 @@ export default function Navbar() {
 
           {/* Mobile Menu Toggle */}
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsMobileMenuOpen(!isMobileMenuOpen)
+            }}
             className={styles.mobileMenuToggle}
             aria-label="Toggle menu"
           >
@@ -187,64 +190,89 @@ export default function Navbar() {
             )}
           </button>
         </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className={styles.mobileMenu}>
-            <ul className={styles.mobileNavList}>
-              {visibleNavItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <li key={item.href}>
-                    {item.comingSoon ? (
-                      <button
-                        onClick={() => handleComingSoon(item.label)}
-                        className={styles.mobileNavLink}
-                      >
-                        <Icon className={styles.navIcon} />
-                        <span>{item.label}</span>
-                      </button>
-                    ) : (
-                      <Link
-                        href={item.href}
-                        className={`${styles.mobileNavLink} ${isActive(item.href) ? styles.active : ''
-                          }`}
-                      >
-                        <Icon className={styles.navIcon} />
-                        <span>{item.label}</span>
-                      </Link>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
-
-            {/* Mobile User Section */}
-            <div className={styles.mobileUserSection}>
-              {user ? (
-                <>
-                  <div className={styles.mobileUserInfo}>
-                    <UserIcon className={styles.icon} />
-                    <div>
-                      <p className={styles.userName}>{user.username}</p>
-                      <p className={styles.userRole}>{user.role}</p>
-                    </div>
-                  </div>
-                  <button onClick={handleLogout} className={styles.mobileLogoutButton}>
-                    <ArrowRightEndOnRectangleIcon className={styles.icon} />
-                    <span>{t('navbar.logout')}</span>
-                  </button>
-                </>
-              ) : (
-                <Link href="/login" className={styles.mobileLoginButton}>
-                  <ArrowRightStartOnRectangleIcon className={styles.icon} />
-                  <span>{t('navbar.login')}</span>
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className={styles.mobileMenuOverlay}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div 
+          className={styles.mobileMenu}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ul className={styles.mobileNavList}>
+            {visibleNavItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <li key={item.href}>
+                  {item.comingSoon ? (
+                    <button
+                      onClick={() => {
+                        handleComingSoon(item.label)
+                        setIsMobileMenuOpen(false)
+                      }}
+                      className={styles.mobileNavLink}
+                    >
+                      <Icon className={styles.navIcon} />
+                      <span>{item.label}</span>
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={`${styles.mobileNavLink} ${isActive(item.href) ? styles.active : ''
+                        }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Icon className={styles.navIcon} />
+                      <span>{item.label}</span>
+                    </Link>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+
+          {/* Mobile User Section */}
+          <div className={styles.mobileUserSection}>
+            {user ? (
+              <>
+                <div className={styles.mobileUserInfo}>
+                  <UserIcon className={styles.icon} />
+                  <div>
+                    <p className={styles.userName}>{user.username}</p>
+                    <p className={styles.userRole}>{user.role}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    handleLogout()
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className={styles.mobileLogoutButton}
+                >
+                  <ArrowRightEndOnRectangleIcon className={styles.icon} />
+                  <span>{t('navbar.logout')}</span>
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className={styles.mobileLoginButton}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <ArrowRightStartOnRectangleIcon className={styles.icon} />
+                <span>{t('navbar.login')}</span>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   )
 }

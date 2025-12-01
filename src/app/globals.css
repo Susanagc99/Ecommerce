@@ -85,3 +85,12 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
 }
+
+/* Toast z-index override - debe estar sobre modales */
+.Toastify__toast-container {
+  z-index: 10000 !important;
+}
+
+.Toastify__toast {
+  z-index: 10000 !important;
+}

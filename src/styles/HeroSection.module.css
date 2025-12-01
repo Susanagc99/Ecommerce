@@ -3,7 +3,7 @@
   position: relative;
   min-height: 600px;
   height: 85vh;
-  max-height: 600px;
+  max-height: 800px;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -96,16 +96,21 @@
   z-index: 10;
   width: 100%;
   padding: 3rem 1rem;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .container {
   max-width: 1280px;
-  margin: 0 auto;
+  margin: 60;
   padding: 0 1rem;
+  width: 100%;
 }
 
 .textContent {
   max-width: 700px;
+  margin-left: 0;
 }
 
 /* Badge */
@@ -256,10 +261,55 @@
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .hero {
+    min-height: 550px;
+    height: auto;
+    max-height: none;
+  }
+  
+  .content {
+    padding: 2.5rem 1rem;
+  }
+  
+  .container {
+    margin: 0 auto;
+  }
+  
+  .textContent {
+    margin-left: 0;
+  }
+  
+  /* Stats en tablet mantienen grid horizontal */
+  .stats {
+    flex-direction: row;
+    gap: 2rem;
+    padding: 1.5rem 2rem;
+    width: auto;
+    max-width: fit-content;
+  }
+  
+  .statDivider {
+    width: 1px;
+    height: 40px;
+  }
+}
+
 @media (max-width: 768px) {
   .hero {
-    min-height: 500px;
+    min-height: 100vh;
     height: auto;
+    max-height: none;
+    padding-top: 70px; /* Account for navbar */
+  }
+
+  .content {
+    padding: 2rem 1rem;
+    min-height: calc(100vh - 70px);
+  }
+  
+  .container {
+    padding: 0 0.75rem;
   }
 
   .stats {
@@ -267,6 +317,7 @@
     gap: 1rem;
     padding: 1.25rem 1.5rem;
     width: 100%;
+    max-width: 100%;
   }
 
   .statDivider {
@@ -276,6 +327,7 @@
 
   .ctas {
     flex-direction: column;
+    margin-bottom: 2rem;
   }
 
   .ctas a {
@@ -283,8 +335,60 @@
   }
 
   .shape {
-    width: 250px !important;
-    height: 250px !important;
+    width: 200px !important;
+    height: 200px !important;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .description {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    min-height: 100vh;
+    padding-top: 60px; /* Account for smaller navbar */
+  }
+  
+  .content {
+    padding: 1.5rem 0.75rem;
+    min-height: calc(100vh - 60px);
+  }
+  
+  .container {
+    padding: 0 0.5rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .description {
+    font-size: 0.9375rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .ctas {
+    margin-bottom: 1.5rem;
+  }
+  
+  .stats {
+    padding: 1rem;
+  }
+  
+  .statNumber {
+    font-size: 1.5rem;
+  }
+  
+  .statLabel {
+    font-size: 0.7rem;
   }
 }
 

@@ -17,6 +17,8 @@ export default function ToastContainer() {
       draggable
       pauseOnHover
       theme="light"
+      style={{ zIndex: 9999 }}
+      toastStyle={{ zIndex: 9999 }}
     />
   )
 }

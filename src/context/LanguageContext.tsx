@@ -12,16 +12,26 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    if (typeof window === 'undefined') return 'es';
+  // Inicializar siempre con 'es' para evitar hydration mismatch
+  // El idioma se actualizará en el cliente después de la hidratación
+  const [language, setLanguageState] = useState<Language>('es');
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Cargar idioma del localStorage solo después de montar (cliente)
+  useEffect(() => {
+    setIsMounted(true);
     const saved = localStorage.getItem('language') as Language | null;
-    return saved || 'es';
-  });
+    if (saved && (saved === 'en' || saved === 'es')) {
+      setLanguageState(saved);
+    }
+  }, []);
 
   // Sincronizar cambios de idioma a localStorage
   useEffect(() => {
-    localStorage.setItem('language', language);
-  }, [language]);
+    if (isMounted) {
+      localStorage.setItem('language', language);
+    }
+  }, [language, isMounted]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
