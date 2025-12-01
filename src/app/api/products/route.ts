@@ -3,6 +3,9 @@ import dbConnection from "@/lib/database";
 import cloudinary from "@/lib/cloudinary";
 import Product from "@/database/models/products";
 import { createProductSchema } from "@/lib/productSchemas";
+import User from "@/database/models/users";
+import { sendEmail } from "@/lib/email";
+import { newProductEmailTemplate } from "@/lib/emailTemplates/newProduct";
 
 /**
  * GET /api/products
@@ -171,6 +174,21 @@ export async function POST(request: NextRequest) {
         const savedProduct = await newProduct.save();
 
         console.log("✅ Producto guardado en MongoDB:", savedProduct._id);
+
+        // Enviar notificación al admin sobre nuevo producto
+        try {
+            const admin = await User.findOne({ role: 'Admin' });
+            if (admin && admin.email) {
+                await sendEmail({
+                    to: admin.email,
+                    subject: 'Nuevo Producto Creado en Techland',
+                    html: newProductEmailTemplate(savedProduct.name, savedProduct.price, savedProduct.category),
+                });
+            }
+        } catch (emailError) {
+            console.error('Error enviando notificación al admin:', emailError);
+            // No fallar la creación del producto si el email falla
+        }
 
         return NextResponse.json(
             {

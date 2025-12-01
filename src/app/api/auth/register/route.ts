@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnection from '@/lib/database';
 import User from '@/database/models/users';
 import { registerSchema } from '@/lib/authSchemas';
+import { sendEmail } from '@/lib/email';
+import { welcomeEmailTemplate } from '@/lib/emailTemplates/welcome';
+import { newUserEmailTemplate } from '@/lib/emailTemplates/newUser';
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,6 +59,33 @@ export async function POST(request: NextRequest) {
       role: 'Customer', // HARDCODED - solo customers desde el registro
       isActive: true,
     });
+
+    // Enviar email de bienvenida al nuevo usuario
+    try {
+      await sendEmail({
+        to: newUser.email,
+        subject: '¡Bienvenido a Techland! 🎉',
+        html: welcomeEmailTemplate(newUser.name),
+      });
+    } catch (emailError) {
+      console.error('Error enviando email de bienvenida:', emailError);
+      // No fallar el registro si el email falla
+    }
+
+    // Enviar notificación al admin sobre nuevo usuario (no bloquea si falla)
+    try {
+      const admin = await User.findOne({ role: 'Admin' });
+      if (admin && admin.email) {
+        await sendEmail({
+          to: admin.email,
+          subject: 'Nuevo Usuario Registrado en Techland',
+          html: newUserEmailTemplate(newUser.name, newUser.email, newUser.username),
+        });
+      }
+    } catch (emailError) {
+      console.error('Error enviando notificación al admin:', emailError);
+      // No fallar el registro si el email falla
+    }
 
     // Retornar datos del usuario creado (sin la contraseña)
     return NextResponse.json(
