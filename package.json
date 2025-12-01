@@ -7,9 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:test": "start-server-and-test dev 3000 cypress:run",
+    "cypress:test:open": "start-server-and-test dev 3000 cypress:open"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.1",
@@ -37,8 +41,10 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.17",
+    "cypress": "^15.7.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
+    "identity-obj-proxy": "^3.0.0",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
     "postcss": "^8.4.33",
