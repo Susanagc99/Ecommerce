@@ -228,7 +228,7 @@ Al registrarse, los usuarios reciben un email de bienvenida con:
 
 ---
 
-## 🔒 Validaciones
+## Validaciones
 
 ### Frontend
 - Validaciones en tiempo real en formularios
