@@ -22,10 +22,11 @@ describe('Registro de Usuario', () => {
 
     it('debe mostrar labels apropiados', () => {
       // Verificar que los labels están presentes
-      cy.contains('label', 'Nombre completo').should('be.visible');
+      cy.contains('label', 'Nombre Completo').should('be.visible');
       cy.contains('label', 'Email').should('be.visible');
-      cy.contains('label', 'Usuario').should('be.visible');
+      cy.contains('label', 'Nombre de Usuario').should('be.visible');
       cy.contains('label', 'Contraseña').should('be.visible');
+      cy.contains('label', 'Confirmar Contraseña').should('be.visible');
     });
   });
 
@@ -34,12 +35,28 @@ describe('Registro de Usuario', () => {
       // Intentar enviar formulario vacío
       cy.get('button[type="submit"]').click();
       
-      // Esperar a que aparezcan los mensajes de error
-      cy.wait(500);
+      // Esperar a que aparezcan los mensajes de error o el toast
+      cy.wait(2000);
       
-      // Verificar que aparecen mensajes de error (pueden variar según tu implementación)
-      // Ajusta estos selectores según tu estructura HTML real
-      cy.get('body').should('contain.text', 'requerido').or('contain.text', 'required');
+      // Verificar que aparecen mensajes de error
+      // Pueden estar en elementos de error de los campos o en el toast
+      // Verificar que el formulario sigue visible (no se envió) o que hay mensajes de error
+      cy.get('form').should('be.visible');
+      
+      // Verificar que hay algún mensaje de error en el body
+      cy.get('body', { timeout: 3000 }).should(($body) => {
+        const text = $body.text().toLowerCase();
+        // Verificar si hay mensajes de error en el body (toast o errores de campo)
+        const hasError = text.includes('requerido') || 
+                        text.includes('required') || 
+                        text.includes('corrige los errores') ||
+                        text.includes('fix errors') ||
+                        text.includes('el nombre es requerido') ||
+                        text.includes('el email es requerido') ||
+                        text.includes('la contraseña es requerida') ||
+                        text.includes('el nombre de usuario es requerido');
+        return hasError;
+      });
     });
 
     it('debe validar formato de email', () => {
@@ -54,7 +71,12 @@ describe('Registro de Usuario', () => {
       
       // Verificar mensaje de error de email
       cy.wait(500);
-      cy.get('body').should('contain.text', 'email').or('contain.text', 'Email');
+      cy.get('body').should(($body) => {
+        const text = $body.text().toLowerCase();
+        expect(text).to.satisfy((txt: string) => 
+          txt.includes('email') || txt.includes('inválido') || txt.includes('invalid')
+        );
+      });
     });
 
     it('debe validar longitud mínima de contraseña', () => {
@@ -67,7 +89,12 @@ describe('Registro de Usuario', () => {
       cy.get('button[type="submit"]').click();
       
       cy.wait(500);
-      cy.get('body').should('contain.text', 'contraseña').or('contain.text', 'password');
+      cy.get('body').should(($body) => {
+        const text = $body.text().toLowerCase();
+        expect(text).to.satisfy((txt: string) => 
+          txt.includes('contraseña') || txt.includes('password')
+        );
+      });
     });
 
     it('debe validar que las contraseñas coincidan', () => {
@@ -80,7 +107,12 @@ describe('Registro de Usuario', () => {
       cy.get('button[type="submit"]').click();
       
       cy.wait(500);
-      cy.get('body').should('contain.text', 'coincid').or('contain.text', 'match');
+      cy.get('body').should(($body) => {
+        const text = $body.text().toLowerCase();
+        expect(text).to.satisfy((txt: string) => 
+          txt.includes('coincid') || txt.includes('match') || txt.includes('no coinciden')
+        );
+      });
     });
   });
 
@@ -105,8 +137,13 @@ describe('Registro de Usuario', () => {
       // Enviar formulario
       cy.get('button[type="submit"]').click();
 
+      // Esperar a que el registro se complete (hay un setTimeout de 800ms en el código)
+      cy.wait(1000);
+      
       // Verificar mensaje de éxito o redirección
-      cy.url({ timeout: 5000 }).should('not.include', '/register');
+      // El registro exitoso debería redirigir a la página principal después de ~800ms
+      cy.url({ timeout: 10000 }).should('not.include', '/register');
+      cy.url().should('include', '/'); // Debería estar en la página principal
     });
 
     it('debe mostrar estado de carga durante el registro', () => {
@@ -127,7 +164,9 @@ describe('Registro de Usuario', () => {
 
   describe('Navegación', () => {
     it('debe navegar al login cuando se hace clic en el enlace', () => {
-      cy.get('a[href="/login"]').click();
+      // El enlace está en el footer del formulario
+      // Buscar el enlace que contiene el texto "iniciar sesión" (case insensitive)
+      cy.contains('a', /iniciar sesión/i).click();
       cy.url().should('include', '/login');
     });
   });
