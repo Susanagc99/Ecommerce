@@ -117,21 +117,32 @@ export async function PUT(
 
         // Preparar datos de actualización
         const updateData: {
-            name: string;
-            description: string;
-            price: number;
-            category: string;
-            subcategory: string;
+            name?: string;
+            description?: string;
+            price?: number;
+            category?: string;
+            subcategory?: string;
             stock?: number;
             featured?: boolean;
             image?: string;
-        } = {
-            name,
-            description,
-            price: parseFloat(price),
-            category,
-            subcategory,
-        };
+        } = {};
+
+        // Solo agregar campos si vienen en el request
+        if (name !== null) {
+            updateData.name = name;
+        }
+        if (description !== null) {
+            updateData.description = description;
+        }
+        if (price !== null) {
+            updateData.price = parseFloat(price);
+        }
+        if (category !== null) {
+            updateData.category = category;
+        }
+        if (subcategory !== null) {
+            updateData.subcategory = subcategory;
+        }
 
         // Campos opcionales
         if (stock !== null) {

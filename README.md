@@ -87,6 +87,12 @@ E-commerce moderno y completo para la venta de gadgets tecnológicos, desarrolla
 - **React Toastify** - Notificaciones
 - **SweetAlert2** - Alertas personalizadas
 
+### Testing
+- **Jest** - Framework de pruebas unitarias
+- **React Testing Library** - Utilidades para testing de componentes
+- **Cypress** - Pruebas end-to-end (E2E)
+- **ts-node** - Ejecución de TypeScript en Jest
+
 ---
 
 ## Instalación y Configuración
@@ -162,13 +168,17 @@ techland/
 │   ├── components/         # Componentes reutilizables
 │   ├── context/            # Context API (Auth, Cart, Language)
 │   ├── database/           # Modelos de MongoDB
+│   ├── helpers/            # Funciones helper/utilidades
 │   ├── i18n/               # Traducciones (es.json, en.json)
-│   ├── lib/                # Utilidades y servicios
-│   │   ├── email.ts        # Servicio de emails
-│   │   ├── emailTemplates/ # Templates HTML
-│   │   ├── authSchemas.ts  # Validaciones auth
-│   │   └── productSchemas.ts # Validaciones productos
+│   ├── lib/                # Configuraciones (DB, Cloudinary, Email)
+│   ├── schemas/            # Validaciones (Yup schemas)
+│   ├── services/           # Lógica de negocio
 │   └── styles/             # CSS Modules
+├── __tests__/              # Pruebas unitarias (Jest)
+├── cypress/                # Pruebas E2E (Cypress)
+│   ├── e2e/               # Tests end-to-end
+│   ├── fixtures/          # Datos de prueba
+│   └── support/           # Comandos personalizados
 └── public/                 # Archivos estáticos
 ```
 
@@ -245,14 +255,105 @@ Al registrarse, los usuarios reciben un email de bienvenida con:
 
 ---
 
+## Testing
+
+El proyecto incluye pruebas unitarias y pruebas end-to-end (E2E) para garantizar la calidad del código.
+
+### Pruebas Unitarias (Jest)
+
+Las pruebas unitarias están ubicadas en `__tests__/` y utilizan **Jest** y **React Testing Library**.
+
+**Ejecutar pruebas unitarias:**
+```bash
+npm test              # Ejecutar todas las pruebas
+npm run test:watch    # Modo watch (observa cambios)
+npm run test:cov      # Con cobertura de código
+```
+
+**Tests implementados:**
+- ✅ Componente Button (6 tests)
+  - Renderizado con texto correcto
+  - Manejo de eventos onClick
+  - Estado disabled
+  - Variantes (primary, secondary)
+  - Tamaños (sm, md, lg)
+  - Propiedad fullWidth
+
+### Pruebas E2E (Cypress)
+
+Las pruebas end-to-end están ubicadas en `cypress/e2e/` y cubren flujos completos de usuario.
+
+**Ejecutar pruebas E2E:**
+```bash
+npm run cypress:open        # Abrir interfaz gráfica de Cypress
+npm run cypress:run         # Ejecutar en modo headless
+npm run cypress:test        # Iniciar servidor y ejecutar tests
+npm run cypress:test:open   # Iniciar servidor y abrir interfaz
+```
+
+**Tests implementados:**
+
+#### Registro de Usuario (`register.cy.ts` - 9 tests)
+- ✅ Interfaz del formulario (campos requeridos, labels)
+- ✅ Validación de formulario (campos vacíos, formato email, longitud contraseña, coincidencia de contraseñas)
+- ✅ Registro exitoso
+- ✅ Estado de carga durante registro
+- ✅ Navegación al login
+
+#### Flujo Completo de Usuario (`user-flow.cy.ts` - 3 tests)
+- ✅ Registro y login automático
+- ✅ Manejo de errores de login
+- ✅ Navegación por la tienda
+
+**Total:** 12 tests E2E pasando ✅
+
+### Configuración de Testing
+
+**Jest** (`jest.config.ts`):
+- Entorno: `jsdom` para testing de componentes React
+- Transformación TypeScript con `ts-jest`
+- Mapeo de alias `@/` para imports
+- Mock de archivos CSS y assets
+
+**Cypress** (`cypress.config.ts`):
+- Base URL: `http://localhost:3000`
+- Viewport: 1280x720
+- Timeouts configurados para requests y comandos
+- Screenshots en caso de fallos
+
+### Estructura de Testing
+
+```
+techland/
+├── __tests__/              # Pruebas unitarias
+│   └── Button.test.tsx
+├── cypress/
+│   ├── e2e/               # Pruebas E2E
+│   │   ├── register.cy.ts
+│   │   └── user-flow.cy.ts
+│   ├── fixtures/          # Datos de prueba
+│   └── support/           # Comandos personalizados
+├── jest.config.ts         # Configuración Jest
+└── jest.setup.ts          # Setup de Jest
+```
+
+---
+
 ## Scripts Disponibles
 
 ```bash
-npm run dev      # Desarrollo (localhost:3000)
-npm run build    # Build de producción
-npm run start    # Servidor de producción
-npm run lint     # Linter
-npm test         # Tests (Jest)
+npm run dev              # Desarrollo (localhost:3000)
+npm run build             # Build de producción
+npm run start              # Servidor de producción
+npm run lint               # Linter
+
+# Testing
+npm test                   # Pruebas unitarias (Jest)
+npm run test:watch         # Pruebas unitarias en modo watch
+npm run test:cov           # Pruebas unitarias con cobertura
+npm run cypress:open       # Abrir Cypress (interfaz gráfica)
+npm run cypress:run        # Ejecutar Cypress (headless)
+npm run cypress:test       # Iniciar servidor y ejecutar Cypress
 ```
 
 ---
@@ -282,12 +383,10 @@ El proyecto está configurado para desplegarse en **Vercel**:
 
 Susanagc 
 
----
 
 ## Licencia
 
 Este proyecto es privado y está destinado para fines educativos.
 
----
 
 **Si te gustó el proyecto, no olvides darle una estrella en GitHub!**
