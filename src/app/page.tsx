@@ -10,7 +10,7 @@ import { getProducts } from '@/services/products'
 import { useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import styles from './page.module.css'
-import { showToast } from '@/lib/toast'
+import { showToast } from '@/helpers/toast'
 
 interface Product {
   _id: string

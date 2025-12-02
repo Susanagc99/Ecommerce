@@ -17,7 +17,7 @@ import {
   XMarkIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline'
-import { showToast } from '@/lib/toast'
+import { showToast } from '@/helpers/toast'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
 import { useLanguage } from '@/context/LanguageContext'

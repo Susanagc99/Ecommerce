@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { showToast } from '@/lib/toast'
+import { showToast } from '@/helpers/toast'
 import { useLanguage } from './LanguageContext'
 
 export interface UserSession {

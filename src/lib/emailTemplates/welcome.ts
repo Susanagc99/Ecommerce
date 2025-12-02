@@ -2,7 +2,7 @@
  * Template de email de bienvenida para nuevos usuarios
  */
 export const welcomeEmailTemplate = (userName: string): string => {
-    return `
+  return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -62,7 +62,7 @@ export const welcomeEmailTemplate = (userName: string): string => {
           <p>En Techland encontrarás los mejores gadgets tecnológicos y accesorios para elevar tu experiencia tech.</p>
           <p>Explora nuestra tienda y descubre productos increíbles:</p>
           <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-        }/shop" class="button">Explorar Tienda</a>
+    }/shop" class="button">Explorar Tienda</a>
           <p style="margin-top: 30px;">Si tienes alguna pregunta, no dudes en contactarnos.</p>
           <p>¡Que disfrutes tu experiencia en Techland!</p>
         </div>

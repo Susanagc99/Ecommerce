@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnection from "@/lib/database";
 import cloudinary from "@/lib/cloudinary";
 import Product from "@/database/models/products";
-import { updateProductSchema } from "@/lib/productSchemas";
+import { updateProductSchema } from "@/schemas/productSchemas";
 
 /**
  * GET /api/products/[id]

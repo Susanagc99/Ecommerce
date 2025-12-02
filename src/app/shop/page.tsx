@@ -11,7 +11,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import styles from './shop.module.css'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { showToast } from '@/lib/toast'
+import { showToast } from '@/helpers/toast'
 
 const ITEMS_PER_PAGE = 8
 

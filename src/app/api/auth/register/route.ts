@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnection from '@/lib/database';
 import User from '@/database/models/users';
-import { registerSchema } from '@/lib/authSchemas';
+import { registerSchema } from '@/schemas/authSchemas';
 import { sendEmail } from '@/lib/email';
 import { welcomeEmailTemplate } from '@/lib/emailTemplates/welcome';
 

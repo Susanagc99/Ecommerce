@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnection from '@/lib/database';
 import User from '@/database/models/users';
-import { loginSchema } from '@/lib/authSchemas';
+import { loginSchema } from '@/schemas/authSchemas';
 
 export async function POST(request: NextRequest) {
     try {
