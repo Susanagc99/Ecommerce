@@ -49,10 +49,12 @@ export async function GET(request: NextRequest) {
         const skip = (validPage - 1) * validPerPage;
 
         // Obtener productos paginados de la base de datos
+        // IMPORTANTE: sort debe ir ANTES de skip y limit para paginación consistente
+        // Usamos _id como sort secundario para garantizar orden estable
         const products = await Product.find(filters)
+            .sort({ createdAt: -1, _id: -1 }) // Más recientes primero, _id para orden estable
             .skip(skip)
             .limit(validPerPage)
-            .sort({ createdAt: -1 }) // Más recientes primero
             .lean(); // Convierte a objetos JavaScript planos (mejor performance)
 
         // Calcular total de páginas

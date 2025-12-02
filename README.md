@@ -15,7 +15,8 @@ E-commerce moderno y completo para la venta de gadgets tecnológicos, desarrolla
 - ✅ Carrito de compras con persistencia local
 - ✅ Vista de detalles de productos con modal
 - ✅ Productos destacados en home
-- ✅ Paginación de productos
+- ✅ Paginación del lado del servidor (server-side pagination)
+- ✅ Filtrado del lado del servidor (server-side filtering)
 - ✅ Diseño responsive (mobile, tablet, desktop)
 
 ### Autenticación y Usuarios
@@ -252,6 +253,54 @@ Al registrarse, los usuarios reciben un email de bienvenida con:
 - Schemas para autenticación (login/registro)
 - Validación de categorías y subcategorías
 - Validación de tipos MIME para imágenes
+
+---
+
+## Paginación y Filtrado del Servidor
+
+El proyecto implementa **paginación y filtrado del lado del servidor** para optimizar el rendimiento y la escalabilidad.
+
+### Características
+
+- ✅ **Paginación del servidor**: Solo se cargan los productos de la página actual
+- ✅ **Filtrado del servidor**: Los filtros se aplican en la base de datos
+- ✅ **Búsqueda del servidor**: Búsqueda por nombre o descripción en MongoDB
+- ✅ **Parámetros de paginación**: `page` y `perPage` (máximo 100 por página)
+- ✅ **Información de paginación**: Total de productos, páginas totales, página actual
+
+### API Endpoint
+
+**GET `/api/products`**
+
+**Query Parameters:**
+- `page` (opcional): Número de página (default: 1)
+- `perPage` (opcional): Items por página (default: 8, máximo: 100)
+- `category` (opcional): Filtrar por categoría
+- `subcategory` (opcional): Filtrar por subcategoría
+- `featured` (opcional): Filtrar productos destacados (`true`/`false`)
+- `search` (opcional): Búsqueda por nombre o descripción
+
+**Ejemplo de respuesta:**
+```json
+{
+  "success": true,
+  "data": [...productos...],
+  "pagination": {
+    "page": 1,
+    "perPage": 8,
+    "total": 50,
+    "totalPages": 7
+  }
+}
+```
+
+### Implementación
+
+- **Backend**: Usa `sort()`, `skip()` y `limit()` de MongoDB para paginación
+  - Orden estable con `sort({ createdAt: -1, _id: -1 })` para evitar duplicados
+  - Orden correcto: `sort()` → `skip()` → `limit()` para consistencia
+- **Frontend**: Envía parámetros de paginación en cada request
+- **Optimización**: Solo se traen los productos necesarios, reduciendo el tiempo de carga
 
 ---
 
