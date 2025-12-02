@@ -36,7 +36,7 @@ export default function LoginPage() {
     setLoading(true)
 
     if (!user.trim()) {
-      setError(t('login.errors.emailRequired'))
+      setError(t('login.errors.usernameRequired'))
       setLoading(false)
       return
     }
@@ -108,14 +108,14 @@ export default function LoginPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <Input
-            label={t('login.email')}
+            label={t('login.username')}
             type="text"
             value={user}
             onChange={(e) => {
               setUser(e.target.value)
               setError('')
             }}
-            error={error && !user.trim() ? t('login.errors.emailRequired') : ''}
+            error={error && !user.trim() ? t('login.errors.usernameRequired') : ''}
             icon={<UserIcon />}
             required
           />

@@ -24,7 +24,6 @@
     }
   },
   "shop": {
-    "title": "Shop all products",
     "subtitle": "Discover the latest tech gadgets and accessories",
     "filter": "Filter",
     "filterByCategory": "Filter by Category:",
@@ -88,8 +87,8 @@
   "login": {
     "title": "Login",
     "subtitle": "Sign in to your account",
-    "email": "Email",
-    "emailPlaceholder": "Enter your email",
+    "username": "Username",
+    "usernamePlaceholder": "Enter your username",
     "password": "Password",
     "passwordPlaceholder": "Enter your password",
     "submitButton": "Sign In",
@@ -98,8 +97,7 @@
     "or": "OR",
     "signInWithGoogle": "Sign in with Google",
     "errors": {
-      "emailRequired": "Email is required",
-      "emailInvalid": "Invalid email",
+      "usernameRequired": "Username is required",
       "passwordRequired": "Password is required",
       "loginError": "Error signing in"
     }

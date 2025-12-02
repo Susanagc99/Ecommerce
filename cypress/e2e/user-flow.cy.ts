@@ -38,8 +38,8 @@ describe('Flujo completo de usuario', () => {
     cy.visit('/login');
     
     // Intentar login con credenciales incorrectas
-    // El login usa type="text" para el campo de email/usuario
-    cy.get('input[type="text"]').first().type('usuario@noexiste.com');
+    // El login usa type="text" para el campo de nombre de usuario
+    cy.get('input[type="text"]').first().type('usuario_inexistente');
     cy.get('input[type="password"]').type('PasswordIncorrecto');
     cy.get('button[type="submit"]').click();
     

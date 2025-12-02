@@ -39,6 +39,12 @@ function ShopContent() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl)
   const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    page: 1,
+    perPage: ITEMS_PER_PAGE,
+  })
 
   // Redirect admin users to dashboard
   useEffect(() => {
@@ -52,14 +58,35 @@ function ShopContent() {
     return [t('shop.all'), ...Object.keys(CATEGORIES)]
   }, [t])
 
-  // Fetch products from API
+  // Fetch products from API with server-side pagination and filtering
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true)
-        const response = await getProducts()
+        
+        // Construir parámetros para la API
+        const params: {
+          category?: string
+          search?: string
+          page: number
+          perPage: number
+        } = {
+          page: currentPage,
+          perPage: ITEMS_PER_PAGE,
+        }
+
+        // Agregar filtros solo si tienen valor
+        if (selectedCategory && selectedCategory !== '' && selectedCategory !== t('shop.all')) {
+          params.category = selectedCategory
+        }
+        if (searchTerm.trim()) {
+          params.search = searchTerm.trim()
+        }
+
+        const response = await getProducts(params)
         if (response.success) {
           setProducts(response.data)
+          setPagination(response.pagination)
         } else {
           showToast.error(t('messages.errorLoadingProducts'))
         }
@@ -72,31 +99,7 @@ function ShopContent() {
     }
 
     fetchProducts()
-  }, [])
-
-  // Filter products
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
-
-      const matchesCategory =
-        selectedCategory === '' ||
-        selectedCategory === t('shop.all') ||
-        product.category === selectedCategory
-
-      return matchesSearch && matchesCategory
-    })
-  }, [products, searchTerm, selectedCategory])
-
-  // Pagination
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-  const paginatedProducts = filteredProducts.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  )
+  }, [currentPage, selectedCategory, searchTerm, t])
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -122,7 +125,6 @@ function ShopContent() {
       <div className={styles.container}>
         {/* Header */}
         <div className={styles.header}>
-          <h1 className={styles.title}>{t('shop.title')}</h1>
           <p className={styles.subtitle}>
             {t('shop.subtitle')}
           </p>
@@ -175,8 +177,8 @@ function ShopContent() {
         {/* Results Info */}
         <div className={styles.resultsInfo}>
           <p className={styles.resultsText}>
-            {t('shop.showing')} <strong>{paginatedProducts.length}</strong> {t('shop.of')}{' '}
-            <strong>{filteredProducts.length}</strong> {t('shop.products')}
+            {t('shop.showing')} <strong>{products.length}</strong> {t('shop.of')}{' '}
+            <strong>{pagination.total}</strong> {t('shop.products')}
             {selectedCategory && selectedCategory !== t('shop.all') && (
               <span className={styles.categoryBadge}> {t('shop.in')} {t(`categories.${selectedCategory}`) || selectedCategory}</span>
             )}
@@ -184,19 +186,19 @@ function ShopContent() {
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length === 0 ? (
+        {products.length === 0 && !loading ? (
           <div className={styles.noProducts}>
             <p>{t('shop.noProducts')}</p>
           </div>
         ) : (
-          <ProductGrid products={paginatedProducts} />
+          <ProductGrid products={products} />
         )}
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {pagination.totalPages > 1 && (
           <Pagination
             currentPage={currentPage}
-            totalPages={totalPages}
+            totalPages={pagination.totalPages}
             onPageChange={setCurrentPage}
           />
         )}

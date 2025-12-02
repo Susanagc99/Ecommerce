@@ -6,19 +6,25 @@ import { createProductSchema } from "@/schemas/productSchemas";
 
 /**
  * GET /api/products
- * Obtiene la lista de productos con filtros opcionales
- * Query params: category, subcategory, featured, search
+ * Obtiene la lista de productos con filtros opcionales y paginación del servidor
+ * Query params: category, subcategory, featured, search, page, perPage
  */
 export async function GET(request: NextRequest) {
     try {
         await dbConnection();
 
-        // Obtener parámetros de búsqueda
+        // Obtener parámetros de búsqueda y paginación
         const { searchParams } = new URL(request.url);
         const category = searchParams.get("category");
         const subcategory = searchParams.get("subcategory");
         const featured = searchParams.get("featured");
         const search = searchParams.get("search");
+        const page = parseInt(searchParams.get("page") || "1");
+        const perPage = parseInt(searchParams.get("perPage") || "8");
+
+        // Validar parámetros de paginación
+        const validPage = Math.max(1, page);
+        const validPerPage = Math.max(1, Math.min(100, perPage)); // Máximo 100 por página
 
         // Construir filtros dinámicamente
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,16 +42,32 @@ export async function GET(request: NextRequest) {
             ];
         }
 
-        // Obtener productos de la base de datos
+        // Contar total de documentos que coinciden con el filtro
+        const total = await Product.countDocuments(filters);
+
+        // Calcular skip para paginación
+        const skip = (validPage - 1) * validPerPage;
+
+        // Obtener productos paginados de la base de datos
         const products = await Product.find(filters)
+            .skip(skip)
+            .limit(validPerPage)
             .sort({ createdAt: -1 }) // Más recientes primero
             .lean(); // Convierte a objetos JavaScript planos (mejor performance)
+
+        // Calcular total de páginas
+        const totalPages = Math.ceil(total / validPerPage);
 
         return NextResponse.json(
             {
                 success: true,
-                count: products.length,
                 data: products,
+                pagination: {
+                    page: validPage,
+                    perPage: validPerPage,
+                    total,
+                    totalPages,
+                },
             },
             { status: 200 }
         );
@@ -150,7 +172,7 @@ export async function POST(request: NextRequest) {
             ]
         });
 
-        console.log("✅ Imagen subida a Cloudinary:", uploadResult.secure_url);
+        console.log("Imagen subida a Cloudinary:", uploadResult.secure_url);
 
         // Conectar a la base de datos
         await dbConnection();
@@ -170,7 +192,7 @@ export async function POST(request: NextRequest) {
         // Guardar producto
         const savedProduct = await newProduct.save();
 
-        console.log("✅ Producto guardado en MongoDB:", savedProduct._id);
+        console.log("Producto guardado en MongoDB:", savedProduct._id);
 
         return NextResponse.json(
             {

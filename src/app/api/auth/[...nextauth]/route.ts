@@ -8,7 +8,19 @@ export const authOptions: NextAuthOptions = {
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
         })
     ],
-    secret: process.env.AUTH_SECRET,
+    secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
+    pages: {
+        signIn: '/login',
+    },
+    callbacks: {
+        async redirect({ url, baseUrl }) {
+            // Permite URLs relativas
+            if (url.startsWith("/")) return `${baseUrl}${url}`;
+            // Permite URLs del mismo dominio
+            if (new URL(url).origin === baseUrl) return url;
+            return baseUrl;
+        },
+    },
 };
 
 const handler = NextAuth(authOptions);

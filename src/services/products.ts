@@ -43,18 +43,19 @@ export interface CreateProductResponse {
     };
 }
 
-// Interface para obtener productos con filtros
+// Interface para obtener productos con filtros y paginación
 export interface GetProductsParams {
     category?: string;
     subcategory?: string;
     featured?: boolean;
     search?: string;
+    page?: number;
+    perPage?: number;
 }
 
-// Interface para la respuesta al obtener productos
+// Interface para la respuesta al obtener productos con paginación
 export interface GetProductsResponse {
     success: boolean;
-    count: number;
     data: Array<{
         _id: string;
         name: string;
@@ -68,6 +69,12 @@ export interface GetProductsResponse {
         createdAt: string;
         updatedAt: string;
     }>;
+    pagination: {
+        page: number;
+        perPage: number;
+        total: number;
+        totalPages: number;
+    };
 }
 
 
@@ -118,9 +125,9 @@ export const createProduct = async (
 };
 
 /**
- * Obtener lista de productos con filtros opcionales
- * @param params - Parámetros de búsqueda (category, subcategory, featured, search)
- * @returns Promise con la lista de productos
+ * Obtener lista de productos con filtros opcionales y paginación del servidor
+ * @param params - Parámetros de búsqueda y paginación (category, subcategory, featured, search, page, perPage)
+ * @returns Promise con la lista de productos y información de paginación
  */
 export const getProducts = async (
     params?: GetProductsParams
@@ -140,6 +147,12 @@ export const getProducts = async (
         }
         if (params?.search) {
             queryParams.append("search", params.search);
+        }
+        if (params?.page) {
+            queryParams.append("page", params.page.toString());
+        }
+        if (params?.perPage) {
+            queryParams.append("perPage", params.perPage.toString());
         }
 
         const queryString = queryParams.toString();

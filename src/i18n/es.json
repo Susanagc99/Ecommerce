@@ -24,7 +24,6 @@
     }
   },
   "shop": {
-    "title": "Todos los productos",
     "subtitle": "Descubre los últimos gadgets tecnológicos y accesorios",
     "filter": "Filtrar",
     "filterByCategory": "Filtrar por Categoría:",
@@ -88,8 +87,8 @@
   "login": {
     "title": "Iniciar Sesión",
     "subtitle": "Inicia sesión en tu cuenta",
-    "email": "Email",
-    "emailPlaceholder": "Ingrese su email",
+    "username": "Nombre de Usuario",
+    "usernamePlaceholder": "Ingrese su nombre de usuario",
     "password": "Contraseña",
     "passwordPlaceholder": "Ingrese su contraseña",
     "submitButton": "Iniciar Sesión",
@@ -98,8 +97,7 @@
     "or": "O",
     "signInWithGoogle": "Iniciar sesión con Google",
     "errors": {
-      "emailRequired": "El email es requerido",
-      "emailInvalid": "Email inválido",
+      "usernameRequired": "El nombre de usuario es requerido",
       "passwordRequired": "La contraseña es requerida",
       "loginError": "Error al iniciar sesión"
     }
